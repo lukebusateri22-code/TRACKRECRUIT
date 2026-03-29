@@ -82,7 +82,7 @@ export default function CompleteAthleteProfile() {
           instagram: formData.instagram || null,
           twitter: formData.twitter || null,
           bio: formData.bio || null,
-        })
+        } as any)
         .select()
         .single()
 
