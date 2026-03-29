@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TFRRS Conference Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fbbf24;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .hover-glow:hover {
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: rgba(251, 191, 36, 0.5);
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(251, 191, 36, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Background Pattern -->
+    <div class="fixed inset-0 opacity-10">
+        <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23fbbf24" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+    </div>
+
+    <div class="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+                <i data-lucide="trophy" class="text-yellow-400"></i>
+                TFRRS Conference Analytics
+            </h1>
+            <p class="text-gray-400 text-lg">Advanced scoring system and team performance analysis</p>
+        </header>
+
+        <!-- Input Section -->
+        <section class="glass-effect rounded-lg p-6 mb-8">
+            <div class="mb-4">
+                <label for="url-input" class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                    <i data-lucide="link" class="w-4 h-4"></i>
+                    TFRRS Conference URL
+                </label>
+                <div class="flex gap-3">
+                    <input 
+                        type="url" 
+                        id="url-input" 
+                        placeholder="https://www.tfrrs.org/lists/5675/Ohio_Valley_OVC_Outdoor_Performance_List"
+                        class="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none text-white placeholder-gray-500"
+                    >
+                    <button 
+                        onclick="analyzeData()" 
+                        id="analyze-btn"
+                        class="px-6 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400 transition-colors flex items-center gap-2 hover-glow"
+                    >
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                        Load Conference Data
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Example URLs -->
+            <div class="mt-4">
+                <p class="text-sm text-gray-400 mb-2">Example URLs:</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="setExampleUrl('https://www.tfrrs.org/lists/5675/Ohio_Valley_OVC_Outdoor_Performance_List')" 
+                            class="text-xs px-3 py-1 bg-gray-800 text-gray-300 rounded-full hover:bg-gray-700 transition-colors border border-gray-700">
+                        OVC Outdoor
+                    </button>
+                    <button onclick="setExampleUrl('https://www.tfrrs.org/lists/5674/Ohio_Valley_OVC_Indoor_Performance_List')" 
+                            class="text-xs px-3 py-1 bg-gray-800 text-gray-300 rounded-full hover:bg-gray-700 transition-colors border border-gray-700">
+                        OVC Indoor
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <section id="loading" class="hidden glass-effect rounded-lg p-12 mb-8 text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-300">Analyzing conference data...</p>
+        </section>
+
+        <!-- Error Section -->
+        <section id="error" class="hidden bg-red-900/20 border border-red-500/30 rounded-lg p-6 mb-8">
+            <div class="flex items-start gap-3">
+                <i data-lucide="alert-circle" class="text-red-400 w-5 h-5 mt-0.5"></i>
+                <div>
+                    <h3 class="font-semibold text-red-400 mb-1">Error</h3>
+                    <p id="error-message" class="text-red-300"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="hidden fade-in">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="glass-effect rounded-lg p-6 hover-glow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400 mb-1">Total Events</p>
+                            <p id="total-events" class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <i data-lucide="target" class="text-yellow-400 w-8 h-8"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-lg p-6 hover-glow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400 mb-1">Total Athletes</p>
+                            <p id="total-athletes" class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <i data-lucide="users" class="text-blue-400 w-8 h-8"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-lg p-6 hover-glow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400 mb-1">Teams</p>
+                            <p id="unique-teams" class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <i data-lucide="building" class="text-green-400 w-8 h-8"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-effect rounded-lg p-6 hover-glow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-400 mb-1">Leader</p>
+                            <p id="leader-info" class="text-lg font-bold text-yellow-400">-</p>
+                        </div>
+                        <i data-lucide="trophy" class="text-yellow-400 w-8 h-8"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Men's Rankings -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="users"></i>
+                    Men's Team Rankings
+                </h3>
+                <div class="table-container">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-800 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">RANK</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">TEAM</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">TOTAL POINTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="men-rankings-table" class="divide-y divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Women's Rankings -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="users"></i>
+                    Women's Team Rankings
+                </h3>
+                <div class="table-container">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-800 sticky top-0">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">RANK</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">TEAM</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">TOTAL POINTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="women-rankings-table" class="divide-y divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Team Details Section -->
+            <div id="team-details" class="hidden glass-effect rounded-lg p-6 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="users"></i>
+                        <span id="team-details-title">Team Details</span>
+                    </h3>
+                    <button onclick="backToRankings()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Back to Rankings
+                    </button>
+                </div>
+                <div id="team-details-content"></div>
+            </div>
+
+            <!-- Event Group Details Section -->
+            <div id="event-group-details" class="hidden glass-effect rounded-lg p-6 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="target"></i>
+                        <span id="event-group-title">Event Group Details</span>
+                    </h3>
+                    <button onclick="backToTeamDetails()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        Back to Team
+                    </button>
+                </div>
+                <div id="event-group-content"></div>
+            </div>
+
+            <!-- Event Results -->
+            <div class="glass-effect rounded-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="list"></i>
+                        Event Results
+                    </h3>
+                    <button onclick="downloadCSV()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        Download CSV
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-800 sticky top-0">
+                            <tr id="results-header"></tr>
+                        </thead>
+                        <tbody id="results-body" class="divide-y divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let currentUrl = '';
+        let currentData = null;
+        let currentGender = '';
+        let currentTeam = '';
+        let currentEventGroup = '';
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        function setExampleUrl(url) {
+            document.getElementById('url-input').value = url;
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('analyze-btn').innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Loading...';
+            lucide.createIcons();
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('analyze-btn').disabled = false;
+            document.getElementById('analyze-btn').innerHTML = '<i data-lucide="bar-chart-3" class="w-4 h-4"></i> Load Conference Data';
+            lucide.createIcons();
+        }
+
+        function showError(message) {
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('results').classList.add('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        function showMainRankings() {
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('team-details').classList.add('hidden');
+            document.getElementById('event-group-details').classList.add('hidden');
+        }
+
+        function showTeamDetails() {
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('team-details').classList.remove('hidden');
+            document.getElementById('event-group-details').classList.add('hidden');
+        }
+
+        function showEventGroupDetails() {
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('team-details').classList.add('hidden');
+            document.getElementById('event-group-details').classList.remove('hidden');
+        }
+
+        function backToRankings() {
+            showMainRankings();
+        }
+
+        function backToTeamDetails() {
+            showTeamDetails();
+        }
+
+        async function analyzeData() {
+            const url = document.getElementById('url-input').value.trim();
+            
+            if (!url) {
+                showError('Please enter a TFRRS URL');
+                return;
+            }
+
+            if (!url.includes('tfrrs.org')) {
+                showError('Please enter a valid TFRRS.org URL');
+                return;
+            }
+
+            currentUrl = url;
+            showLoading();
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    hideError();
+                    currentData = result;
+                    displayResults(result);
+                } else {
+                    showError(result.error || 'Failed to analyze data');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayResults(result) {
+            // Update summary cards
+            document.getElementById('total-events').textContent = result.summary.total_events;
+            document.getElementById('total-athletes').textContent = result.summary.total_athletes;
+            document.getElementById('unique-teams').textContent = result.summary.unique_teams;
+            
+            const leaderInfo = `M: ${result.summary.men_leader} | W: ${result.summary.women_leader}`;
+            document.getElementById('leader-info').textContent = leaderInfo;
+            
+            // Update rankings tables
+            updateRankingsTables();
+            displayEventResults();
+            
+            // Show main rankings section
+            showMainRankings();
+        }
+
+        function updateRankingsTables() {
+            // Update Men's Rankings
+            const menRankings = currentData.rankings['Men'] || [];
+            const menTableBody = document.getElementById('men-rankings-table');
+            menTableBody.innerHTML = '';
+            
+            menRankings.forEach(team => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/50 transition-colors cursor-pointer';
+                tr.onclick = () => showTeamBreakdown('Men', team.team);
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">${team.rank}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white font-semibold">${team.team}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-400 font-bold">${team.total || 0}</td>
+                `;
+                
+                menTableBody.appendChild(tr);
+            });
+            
+            // Update Women's Rankings
+            const womenRankings = currentData.rankings['Women'] || [];
+            const womenTableBody = document.getElementById('women-rankings-table');
+            womenTableBody.innerHTML = '';
+            
+            womenRankings.forEach(team => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/50 transition-colors cursor-pointer';
+                tr.onclick = () => showTeamBreakdown('Women', team.team);
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">${team.rank}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white font-semibold">${team.team}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-400 font-bold">${team.total || 0}</td>
+                `;
+                
+                womenTableBody.appendChild(tr);
+            });
+        }
+
+        function showTeamBreakdown(gender, teamName) {
+            currentGender = gender;
+            currentTeam = teamName;
+            
+            const teamBreakdown = currentData.event_breakdown[gender][teamName] || {};
+            const teamScores = currentData.rankings[gender].find(t => t.team === teamName) || {};
+            
+            document.getElementById('team-details-title').textContent = `${teamName} - ${gender}'s Team`;
+            
+            let html = '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
+            
+            // Summary cards for each category
+            const categories = ['Sprints', 'Distance', 'Jumps', 'Throws', 'Hurdles', 'Relays', 'Combined'];
+            categories.forEach(category => {
+                const points = teamScores[category] || 0;
+                html += `
+                    <div class="bg-gray-800 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors" onclick="showEventGroupBreakdown('${category}')">
+                        <h4 class="font-semibold text-yellow-400 mb-2">${category}</h4>
+                        <p class="text-2xl font-bold text-white">${points}</p>
+                        <p class="text-sm text-gray-400">points</p>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            // Detailed event breakdown
+            html += '<div class="space-y-4">';
+            Object.entries(teamBreakdown).forEach(([category, events]) => {
+                html += `
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-3 cursor-pointer" onclick="showEventGroupBreakdown('${category}')">
+                            <h4 class="font-semibold text-yellow-400">${category}</h4>
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                        </div>
+                        <div class="space-y-2">
+                            ${events.slice(0, 3).map(event => `
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-300">${event.event}</span>
+                                    <span class="text-white font-medium">${event.points} pts</span>
+                                </div>
+                            `).join('')}
+                            ${events.length > 3 ? `<p class="text-xs text-gray-500">... and ${events.length - 3} more</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            document.getElementById('team-details-content').innerHTML = html;
+            showTeamDetails();
+            lucide.createIcons();
+        }
+
+        function showEventGroupBreakdown(eventGroup) {
+            currentEventGroup = eventGroup;
+            
+            const teamBreakdown = currentData.event_breakdown[currentGender][currentTeam] || {};
+            const events = teamBreakdown[eventGroup] || [];
+            
+            document.getElementById('event-group-title').textContent = `${currentTeam} - ${eventGroup} (${currentGender})`;
+            
+            let html = `
+                <div class="mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-800 rounded-lg p-4">
+                            <p class="text-sm text-gray-400">Total Events</p>
+                            <p class="text-2xl font-bold text-white">${events.length}</p>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4">
+                            <p class="text-sm text-gray-400">Total Points</p>
+                            <p class="text-2xl font-bold text-yellow-400">${events.reduce((sum, e) => sum + e.points, 0)}</p>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-4">
+                            <p class="text-sm text-gray-400">Average Points</p>
+                            <p class="text-2xl font-bold text-white">${events.length > 0 ? (events.reduce((sum, e) => sum + e.points, 0) / events.length).toFixed(1) : 0}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+            `;
+            
+            events.forEach(event => {
+                html += `
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-white mb-1">${event.event}</h4>
+                                <p class="text-sm text-gray-400">Rank: ${event.rank}</p>
+                                <p class="text-sm text-gray-400">Athlete: ${event.athlete}</p>
+                                <p class="text-sm text-gray-400">Mark: ${event.mark}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-yellow-400">${event.points}</p>
+                                <p class="text-sm text-gray-400">points</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            document.getElementById('event-group-content').innerHTML = html;
+            showEventGroupDetails();
+        }
+
+        function displayEventResults() {
+            const raw_data = currentData.raw_data || [];
+            const header = document.getElementById('results-header');
+            const tbody = document.getElementById('results-body');
+            
+            // Create header
+            header.innerHTML = '';
+            ['Event', 'Athlete', 'Team', 'Rank', 'Mark', 'Category'].forEach(col => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider';
+                th.textContent = col;
+                header.appendChild(th);
+            });
+            
+            // Create body (limit to first 50 for performance)
+            tbody.innerHTML = '';
+            raw_data.slice(0, 50).forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-800/50 transition-colors';
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${row.event}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${row.athlete}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${row.team}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${row.rank}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${row.mark}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${row.category}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function downloadCSV() {
+            if (!currentUrl) {
+                showError('No data to download. Please analyze data first.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: currentUrl })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'tfrrs_data.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to download CSV');
+                }
+            } catch (error) {
+                showError('Download error: ' + error.message);
+            }
+        }
+
+        // Allow Enter key to trigger analysis
+        document.getElementById('url-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                analyzeData();
+            }
+        });
+    </script>
+</body>
+</html>
