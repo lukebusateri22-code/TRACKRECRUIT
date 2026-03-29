@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Upload, Check, AlertCircle, Shield, FileText, Camera } from 'lucide-react'
 
@@ -17,10 +17,10 @@ export default function VerifyProfile() {
     proofDocument: null as File | null
   })
 
-  useState(() => {
+  useEffect(() => {
     const role = localStorage.getItem('userRole') as 'athlete' | 'coach' | null
     setUserRole(role)
-  })
+  }, [])
 
   const handleFileUpload = (type: 'id' | 'proof', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

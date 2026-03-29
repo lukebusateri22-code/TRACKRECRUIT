@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, DollarSign, TrendingUp, AlertCircle, Calculator } from 'lucide-react'
+import { ArrowLeft, DollarSign, TrendingUp, AlertCircle, Calculator, Award } from 'lucide-react'
 import RoleGuard from '@/components/RoleGuard'
 
 export default function ScholarshipCalculator() {
