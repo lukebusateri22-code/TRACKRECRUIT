@@ -43,34 +43,46 @@ export default function ConferencesPage() {
       setLoading(true)
       setError('')
       
-      // Quick check for database connection with shorter timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database connection timeout')), 5000)
-      )
+      console.log('🔍 Testing database connection...')
       
-      const dataPromise = supabase
+      // Test connection with a simple query first
+      const { data: testData, error: testError } = await supabase
+        .from('profiles')
+        .select('count')
+        .limit(1)
+        .single()
+      
+      if (testError) {
+        if (testError.code === '42P01' || testError.message?.includes('does not exist')) {
+          setError('Database tables not created yet. Please run the SQL setup script in Supabase.')
+          return
+        }
+        console.error('❌ Connection test failed:', testError)
+        setError(`Connection failed: ${testError.message}`)
+        return
+      }
+      
+      console.log('✅ Database connection successful')
+      
+      // Now try to load conferences
+      const { data, error } = await supabase
         .from('tffrs_conferences')
         .select('id, url, conference_name, scraped_at, data')
         .order('scraped_at', { ascending: false })
       
-      const { data, error } = await Promise.race([dataPromise, timeoutPromise]) as any
-      
       if (error) {
-        // If table doesn't exist, show helpful message
         if (error.code === '42P01' || error.message?.includes('does not exist')) {
-          setError('Database tables not created yet. Please run the SQL setup script in Supabase.')
+          setError('Conference tables not created yet. Please run the TFFRS SQL setup script.')
           return
         }
         throw error
       }
       
+      console.log('✅ Conferences loaded:', data?.length || 0)
       setConferences(data || [])
     } catch (err: any) {
-      if (err.message?.includes('timeout')) {
-        setError('Database connection timeout. Please check your connection and try again.')
-      } else {
-        setError(err.message || 'Failed to load conferences')
-      }
+      console.error('💥 Load conferences error:', err)
+      setError(`Database error: ${err.message || 'Unknown error'}`)
     } finally {
       setLoading(false)
     }
