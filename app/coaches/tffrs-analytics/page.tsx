@@ -102,6 +102,13 @@ export default function TFFRSAnalytics() {
       {/* Header */}
       <div className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center space-x-6">
+            <Link href="/home" className="text-gray-900 font-semibold hover:text-gray-700">Home</Link>
+            <Link href="/coaches/conferences" className="text-gray-900 font-semibold hover:text-gray-700">Conference Library</Link>
+            <Link href="/coaches/tffrs-analytics" className="text-gray-900 font-semibold border-b-4 border-gray-900 pb-1">
+              Conference Analytics
+            </Link>
+          </div>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-black text-gray-900">Conference Analytics</h1>
@@ -121,10 +128,18 @@ export default function TFFRSAnalytics() {
         {/* Saved Conferences Dropdown */}
         {savedConferences.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <Trophy className="w-5 h-5 mr-2 text-trackrecruit-yellow" />
-              Saved Conferences
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                <Trophy className="w-5 h-5 mr-2 text-trackrecruit-yellow" />
+                Saved Conferences
+              </h2>
+              <Link
+                href="/coaches/conferences"
+                className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+              >
+                View All →
+              </Link>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedConferences.map((conf) => (
                 <button
