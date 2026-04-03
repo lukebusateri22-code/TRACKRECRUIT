@@ -92,7 +92,7 @@ export default function CoachDashboard() {
               </Link>
               <div className="flex items-center space-x-6">
                 <Link href="/coaches/dashboard" className="text-gray-900 font-semibold hover:text-gray-700">Dashboard</Link>
-                <Link href="/coaches/tffrs-analytics" className="text-gray-900 font-semibold hover:text-gray-700">TFFRS Analytics</Link>
+                <Link href="/coaches/conference-analytics" className="text-gray-900 font-semibold hover:text-gray-700">Conference Analytics</Link>
                 <Link href="/coaches/search" className="text-gray-900 font-semibold hover:text-gray-700">Search Athletes</Link>
                 <Link href="/coaches/messages" className="text-gray-900 font-semibold hover:text-gray-700">Messages</Link>
                 {coachConference && (

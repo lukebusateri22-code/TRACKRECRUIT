@@ -7,7 +7,7 @@ export default function Home() {
   const router = useRouter()
   
   useEffect(() => {
-    router.push('/coaches/conference-list')
+    router.push('/home')
   }, [router])
 
   return (

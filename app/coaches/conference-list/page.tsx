@@ -90,10 +90,10 @@ export default function ConferenceListPage() {
             </div>
             <div className="flex items-center space-x-4">
               <Link
-                href="/coaches/tffrs-analytics"
+                href="/coaches/conference-analytics"
                 className="bg-gray-900 text-trackrecruit-yellow px-4 py-2 rounded-lg font-bold hover:bg-gray-800 transition"
               >
-                Scrape New
+                Conference Analytics
               </Link>
             </div>
           </div>
@@ -130,10 +130,10 @@ export default function ConferenceListPage() {
             </p>
             {!searchTerm && (
               <Link
-                href="/coaches/tffrs-analytics"
+                href="/coaches/conference-analytics"
                 className="inline-flex items-center bg-trackrecruit-yellow text-gray-900 px-6 py-3 rounded-lg font-bold hover:bg-yellow-400 transition"
               >
-                Scrape First Conference
+                View Conference Analytics
               </Link>
             )}
           </div>

@@ -181,8 +181,15 @@ export default function ConferenceDetailPage() {
                           {team.rank || index + 1}
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-900">{team.team || 'Unknown'}</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points || 0}</td>
+                      <td className="py-3 px-4 font-medium text-gray-900">
+                      <Link 
+                        href={`/coaches/conference-detail/${conferenceId}/team/Men/${encodeURIComponent(team.team || 'Unknown')}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {team.team || 'Unknown'}
+                      </Link>
+                    </td>
+                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total || 0}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -220,8 +227,15 @@ export default function ConferenceDetailPage() {
                           {team.rank || index + 1}
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-900">{team.team || 'Unknown'}</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points || 0}</td>
+                      <td className="py-3 px-4 font-medium text-gray-900">
+                      <Link 
+                        href={`/coaches/conference-detail/${conferenceId}/team/Women/${encodeURIComponent(team.team || 'Unknown')}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {team.team || 'Unknown'}
+                      </Link>
+                    </td>
+                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total || 0}</td>
                     </tr>
                   ))}
                 </tbody>
