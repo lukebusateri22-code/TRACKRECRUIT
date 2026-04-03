@@ -3,14 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Search, Trophy, ExternalLink } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
 
 interface Conference {
   id: string
   conference_name: string
   url: string
-  season: string
-  updated_at: string
 }
 
 export default function ConferenceListPage() {
@@ -29,7 +27,19 @@ export default function ConferenceListPage() {
         console.log('📡 Making Supabase query...')
         const startTime = performance.now()
         
-        const supabase = createClient()
+        // Create a simple client without auth to avoid lock issues
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+              detectSessionInUrl: false
+            }
+          }
+        )
+        
         const { data, error } = await supabase
           .from('tffrs_conferences')
           .select('id, conference_name, url')
@@ -119,7 +129,6 @@ export default function ConferenceListPage() {
                 <thead>
                   <tr className="bg-gray-50 border-b-2 border-gray-200">
                     <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Conference Name</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Last Updated</th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Source</th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Actions</th>
                   </tr>
@@ -129,9 +138,6 @@ export default function ConferenceListPage() {
                     <tr key={conference.id} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <span className="font-semibold text-gray-900">{conference.conference_name || 'Unknown Conference'}</span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600">
-                        {new Date(conference.updated_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4">
                         <a
