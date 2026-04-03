@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, TrendingUp, Users, Trophy, BarChart3 } from 'lucide-react'
+import { Search, TrendingUp, Users, Trophy, BarChart3, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export const dynamic = 'force-dynamic'
@@ -270,9 +270,17 @@ export default function ConferenceAnalyticsPage() {
       <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-black text-gray-900">Conference Analytics</h1>
-              <p className="text-gray-700 mt-1">Analyze NCAA conference performance data</p>
+            <div className="flex items-center">
+              <Link
+                href="/coaches/dashboard"
+                className="mr-4 p-2 rounded-lg hover:bg-gray-900 hover:text-white transition"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <div>
+                <h1 className="text-3xl font-black text-gray-900">Conference Analytics</h1>
+                <p className="text-gray-700 mt-1">Analyze NCAA conference performance data</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Link
