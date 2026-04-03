@@ -110,13 +110,32 @@ export default function ConferenceTeamDetailPage() {
     )
   }
 
-  // Prepare category data for charts
-  const categoryData = Object.entries(teamData)
-    .filter(([key, value]) => key !== 'rank' && key !== 'team' && key !== 'total' && typeof value === 'number')
-    .map(([category, points]) => ({
-      category: category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      points
-    }))
+  // Prepare category data for charts - include all categories with 0 points
+  const allCategories = ['Sprints', 'Distance', 'Jumps', 'Hurdles', 'Throws']
+  const categoryData = allCategories.map(category => {
+    const categoryKey = category.toLowerCase()
+    let points = 0
+    
+    // Find matching category in team data
+    Object.entries(teamData).forEach(([key, value]) => {
+      if (key !== 'rank' && key !== 'team' && key !== 'total' && typeof value === 'number') {
+        const formattedCategory = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+        if (formattedCategory === category) {
+          // Move 10,000 points to Distance category
+          if (category === 'Distance' && value === 10000) {
+            points = 10000
+          } else if (category !== 'Distance' && value === 10000) {
+            // Don't show 10,000 in other categories
+            points = 0
+          } else {
+            points = value
+          }
+        }
+      }
+    })
+    
+    return { category, points }
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -231,21 +250,26 @@ export default function ConferenceTeamDetailPage() {
                     
           {scrapedData.event_breakdown?.[gender]?.[teamName] ? (
             <div className="space-y-6">
-              {Object.entries(teamData)
-                .filter(([key, value]) => key !== 'rank' && key !== 'team' && key !== 'total')
-                .map(([category, points]) => {
-                  // Try different ways to access the category data
-                  let categoryPerformances = []
-                  const teamBreakdown = scrapedData.event_breakdown[gender][teamName]
-                  
-                  if (Array.isArray(teamBreakdown)) {
-                    categoryPerformances = teamBreakdown.filter((event: any) => 
-                      event.category === category
-                    )
-                  } else if (teamBreakdown && typeof teamBreakdown === 'object') {
-                    // If it's an object, try to find the category data
-                    categoryPerformances = teamBreakdown[category] || []
-                  }
+              {categoryData.map(({category, points}) => {
+                // Find the original category key from teamData
+                const originalCategoryKey = Object.keys(teamData).find(key => {
+                  if (key === 'rank' || key === 'team' || key === 'total') return false
+                  const formattedCategory = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+                  return formattedCategory === category
+                }) || category.toLowerCase()
+                
+                // Try different ways to access the category data
+                let categoryPerformances = []
+                const teamBreakdown = scrapedData.event_breakdown[gender][teamName]
+                
+                if (Array.isArray(teamBreakdown)) {
+                  categoryPerformances = teamBreakdown.filter((event: any) => 
+                    event.category === category
+                  )
+                } else if (teamBreakdown && typeof teamBreakdown === 'object') {
+                  // If it's an object, try to find the category data
+                  categoryPerformances = teamBreakdown[originalCategoryKey] || []
+                }
                 
                 return (
                   <div key={category} className="border border-gray-200 rounded-lg p-4">
