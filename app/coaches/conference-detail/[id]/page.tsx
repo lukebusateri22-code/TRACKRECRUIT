@@ -71,8 +71,8 @@ export default function ConferenceDetailPage() {
   }
 
   const scrapedData = conference.data
-  const men = scrapedData.men || []
-  const women = scrapedData.women || []
+  const men = scrapedData.rankings?.Men || []
+  const women = scrapedData.rankings?.Women || []
 
   return (
     <div className="min-h-screen bg-gray-50">

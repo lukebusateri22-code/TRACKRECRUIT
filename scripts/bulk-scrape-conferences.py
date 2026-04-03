@@ -10,11 +10,18 @@ import time
 import sys
 from datetime import datetime
 import os
-from supabase import create_client
 
-# Supabase configuration
-SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://your-project-url.supabase.co')
-SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'your-service-role-key')
+# Load environment variables from .env file
+def load_env():
+    with open('.env', 'r') as f:
+        for line in f:
+            if line.startswith('SUPABASE_URL='):
+                SUPABASE_URL = line.split('=')[1].strip()
+            elif line.startswith('SUPABASE_SERVICE_ROLE_KEY='):
+                SUPABASE_KEY = line.split('=')[1].strip()
+    return SUPABASE_URL, SUPABASE_KEY
+
+SUPABASE_URL, SUPABASE_KEY = load_env()
 
 # Conference URLs to scrape
 CONFERENCE_URLS = [
@@ -63,23 +70,51 @@ def scrape_conference(url):
         print(f"❌ Error scraping {url}: {e}")
         return None
 
+def extract_conference_name(url):
+    """Extract conference name from URL"""
+    # Extract the part after the last slash and before .html
+    name_part = url.split('/')[-1].replace('.html', '').replace('_Outdoor_Performance_List', '')
+    # Replace underscores with spaces and format nicely
+    return name_part.replace('_', ' ').replace(' ', ' ').title()
+
 def save_to_supabase(url, data):
-    """Save scraped data to Supabase"""
+    """Save scraped data to Supabase using requests"""
     try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}',
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+        }
         
-        conference_name = data.get('conference_name', 'Unknown Conference')
+        conference_name = extract_conference_name(url)
         
-        # Save or update conference
-        result = supabase.table('tffrs_conferences').upsert({
+        # Check if conference exists
+        check_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?url=eq.{url}"
+        response = requests.get(check_url, headers=headers)
+        
+        conference_data = {
             'url': url,
             'conference_name': conference_name,
             'data': data,  # Save the exact raw data
             'scraped_at': datetime.now().isoformat()
-        }, on_conflict='url').execute()
+        }
         
-        print(f"✅ Saved: {conference_name}")
-        return True
+        if response.status_code == 200 and response.json():
+            # Update existing
+            update_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?url=eq.{url}"
+            response = requests.patch(update_url, headers=headers, json=conference_data)
+        else:
+            # Insert new
+            insert_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences"
+            response = requests.post(insert_url, headers=headers, json=conference_data)
+        
+        if response.status_code in [200, 201, 204]:
+            print(f"✅ Saved: {conference_name}")
+            return True
+        else:
+            print(f"❌ Save failed: {response.status_code} - {response.text}")
+            return False
         
     except Exception as e:
         print(f"❌ Error saving to Supabase: {e}")

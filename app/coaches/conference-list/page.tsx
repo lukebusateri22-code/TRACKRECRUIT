@@ -100,7 +100,7 @@ export default function ConferenceListPage() {
 
         {/* Conference List */}
         {filteredConferences.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-12 text-center">
+          <div className="text-center py-12">
             <Trophy className="w-20 h-20 text-gray-300 mx-auto mb-6" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">No conferences found</h3>
             <p className="text-gray-600 mb-6">
@@ -116,43 +116,50 @@ export default function ConferenceListPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200">
-            <div className="divide-y divide-gray-200">
-              {filteredConferences.map((conference) => (
-                <div key={conference.id} className="p-6 hover:bg-gray-50 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-grow">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">
-                        {conference.conference_name}
-                      </h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(conference.scraped_at).toLocaleDateString()}
-                        </div>
-                        <a
-                          href={conference.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-blue-600 hover:text-blue-800"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-1" />
-                          Source
-                        </a>
+          <div className="bg-white border border-gray-200">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left py-3 px-6 font-bold text-gray-900">Conference Name</th>
+                  <th className="text-left py-3 px-6 font-bold text-gray-900">Last Updated</th>
+                  <th className="text-left py-3 px-6 font-bold text-gray-900">Source</th>
+                  <th className="text-center py-3 px-6 font-bold text-gray-900">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredConferences.map((conference, index) => (
+                  <tr key={conference.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="py-4 px-6">
+                      <div className="font-medium text-gray-900">
+                        {conference.conference_name || 'Unknown Conference'}
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
+                    </td>
+                    <td className="py-4 px-6 text-gray-600">
+                      {new Date(conference.scraped_at).toLocaleDateString()}
+                    </td>
+                    <td className="py-4 px-6">
+                      <a
+                        href={conference.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 flex items-center"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        TFRRS
+                      </a>
+                    </td>
+                    <td className="py-4 px-6 text-center">
                       <Link
                         href={`/coaches/conference-detail/${conference.id}`}
-                        className="bg-gray-900 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-800 transition"
+                        className="bg-trackrecruit-yellow text-gray-900 px-4 py-2 rounded font-bold hover:bg-yellow-400 transition inline-block"
                       >
-                        View Data
+                        View Rankings
                       </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
