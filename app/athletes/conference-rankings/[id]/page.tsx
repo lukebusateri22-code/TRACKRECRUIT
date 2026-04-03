@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Trophy, ExternalLink } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
 import { useParams } from 'next/navigation'
 
 interface Performance {
@@ -32,7 +32,6 @@ export default function ConferenceRankingsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedEvent, setSelectedEvent] = useState<string>('')
   const [categoryFilter, setCategoryFilter] = useState<string>('All')
-  const supabase = createClient()
 
   useEffect(() => {
     loadConferenceData()
@@ -40,6 +39,19 @@ export default function ConferenceRankingsPage() {
 
   const loadConferenceData = async () => {
     try {
+      // Create client without auth to avoid lock issues
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          }
+        }
+      )
+      
       // Load conference info
       const { data: confData, error: confError } = await supabase
         .from('tffrs_conferences')
