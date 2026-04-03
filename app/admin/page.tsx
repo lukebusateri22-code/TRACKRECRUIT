@@ -111,6 +111,17 @@ export default function AdminDashboard() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div>
+            {/* Quick Actions */}
+            <div className="mb-8">
+              <Link 
+                href="/admin/create-coach"
+                className="inline-flex items-center px-6 py-3 bg-trackrecruit-yellow text-gray-900 rounded-lg font-bold hover:bg-yellow-400 transition"
+              >
+                <Users className="w-5 h-5 mr-2" />
+                Create Coach Account
+              </Link>
+            </div>
+
             {/* Stats Grid */}
             <div className="grid md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
