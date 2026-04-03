@@ -47,8 +47,16 @@ export default function ConferenceDetailPage() {
         .single()
 
       if (error) throw error
-      setConference((data as any).data)
+      
+      console.log('🔍 Raw conference data from DB:', data)
+      const conferenceData = (data as any).data
+      console.log('🔍 Parsed conference data:', conferenceData)
+      console.log('🔍 Men teams:', conferenceData?.men)
+      console.log('🔍 Women teams:', conferenceData?.women)
+      
+      setConference(conferenceData)
     } catch (err: any) {
+      console.error('💥 Load conference error:', err)
       setError(err.message || 'Failed to load conference')
     } finally {
       setLoading(false)
@@ -92,22 +100,25 @@ export default function ConferenceDetailPage() {
     )
   }
 
-  // Prepare chart data
-  const topMenTeams = conference.men.slice(0, 10).map(team => ({
-    team: team.team,
-    points: team.total_points,
-    rank: team.rank
+  // Prepare chart data with null checks
+  const menTeams = conference.men || []
+  const womenTeams = conference.women || []
+  
+  const topMenTeams = menTeams.slice(0, 10).map(team => ({
+    team: team.team || 'Unknown',
+    points: team.total_points || 0,
+    rank: team.rank || 0
   }))
 
-  const topWomenTeams = conference.women.slice(0, 10).map(team => ({
-    team: team.team,
-    points: team.total_points,
-    rank: team.rank
+  const topWomenTeams = womenTeams.slice(0, 10).map(team => ({
+    team: team.team || 'Unknown',
+    points: team.total_points || 0,
+    rank: team.rank || 0
   }))
 
-  const totalTeams = conference.men.length + conference.women.length
-  const totalPoints = conference.men.reduce((sum, team) => sum + team.total_points, 0) + 
-                     conference.women.reduce((sum, team) => sum + team.total_points, 0)
+  const totalTeams = menTeams.length + womenTeams.length
+  const totalPoints = menTeams.reduce((sum, team) => sum + (team.total_points || 0), 0) + 
+                     womenTeams.reduce((sum, team) => sum + (team.total_points || 0), 0)
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316']
 
@@ -146,7 +157,7 @@ export default function ConferenceDetailPage() {
             <div className="flex items-center">
               <Users className="w-8 h-8 text-blue-500 mr-3" />
               <div>
-                <p className="text-2xl font-bold text-gray-900">{conference.men.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{menTeams.length}</p>
                 <p className="text-sm text-gray-600">Men's Teams</p>
               </div>
             </div>
@@ -155,7 +166,7 @@ export default function ConferenceDetailPage() {
             <div className="flex items-center">
               <Users className="w-8 h-8 text-pink-500 mr-3" />
               <div>
-                <p className="text-2xl font-bold text-gray-900">{conference.women.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{womenTeams.length}</p>
                 <p className="text-sm text-gray-600">Women's Teams</p>
               </div>
             </div>
@@ -235,20 +246,20 @@ export default function ConferenceDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {conference.men.map((team) => (
-                    <tr key={team.team} className="border-b border-gray-100 hover:bg-gray-50">
+                  {menTeams.map((team) => (
+                    <tr key={team.team || team.rank} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          team.rank === 1 ? 'bg-yellow-400 text-gray-900' :
-                          team.rank === 2 ? 'bg-gray-300 text-gray-900' :
-                          team.rank === 3 ? 'bg-orange-400 text-white' :
+                          (team.rank || 0) === 1 ? 'bg-yellow-400 text-gray-900' :
+                          (team.rank || 0) === 2 ? 'bg-gray-300 text-gray-900' :
+                          (team.rank || 0) === 3 ? 'bg-orange-400 text-white' :
                           'bg-gray-100 text-gray-700'
                         }`}>
-                          {team.rank}
+                          {team.rank || '-'}
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-900">{team.team}</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points}</td>
+                      <td className="py-3 px-4 font-medium text-gray-900">{team.team || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points || 0}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -272,20 +283,20 @@ export default function ConferenceDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {conference.women.map((team) => (
-                    <tr key={team.team} className="border-b border-gray-100 hover:bg-gray-50">
+                  {womenTeams.map((team) => (
+                    <tr key={team.team || team.rank} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          team.rank === 1 ? 'bg-yellow-400 text-gray-900' :
-                          team.rank === 2 ? 'bg-gray-300 text-gray-900' :
-                          team.rank === 3 ? 'bg-orange-400 text-white' :
+                          (team.rank || 0) === 1 ? 'bg-yellow-400 text-gray-900' :
+                          (team.rank || 0) === 2 ? 'bg-gray-300 text-gray-900' :
+                          (team.rank || 0) === 3 ? 'bg-orange-400 text-white' :
                           'bg-gray-100 text-gray-700'
                         }`}>
-                          {team.rank}
+                          {team.rank || '-'}
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-900">{team.team}</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points}</td>
+                      <td className="py-3 px-4 font-medium text-gray-900">{team.team || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points || 0}</td>
                     </tr>
                   ))}
                 </tbody>
