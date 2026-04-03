@@ -215,7 +215,7 @@ export default function CoachDashboard() {
                 <Link href="/coaches/search" className="block w-full px-4 py-2 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 text-center">
                   Search Athletes
                 </Link>
-                <Link href="/messages" className="block w-full px-4 py-2 border-2 border-gray-300 rounded font-semibold hover:bg-gray-50 text-center">
+                <Link href="/coaches/messages" className="block w-full px-4 py-2 border-2 border-gray-300 rounded font-semibold hover:bg-gray-50 text-center">
                   View Messages
                 </Link>
                 <Link href="/coaches/preferences" className="block w-full px-4 py-2 border-2 border-gray-300 rounded font-semibold hover:bg-gray-50 text-center">
