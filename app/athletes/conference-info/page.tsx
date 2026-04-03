@@ -115,7 +115,7 @@ export default function ConferenceContextPage() {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <div>
-                <h1 className="text-3xl font-black text-gray-900">Conference Context</h1>
+                <h1 className="text-3xl font-black text-gray-900">Conference Info</h1>
                 <p className="text-gray-700 mt-1">Understand scoring and rankings</p>
               </div>
             </div>
@@ -208,11 +208,11 @@ export default function ConferenceContextPage() {
             ))}
           </div>
 
-          {/* National College Team Rankings */}
+          {/* College Track Ranking */}
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="flex items-center mb-4">
               <TrendingUp className="w-6 h-6 text-purple-500 mr-2" />
-              <h2 className="text-2xl font-bold text-gray-900">National College Team Rankings</h2>
+              <h2 className="text-2xl font-bold text-gray-900">College Track Ranking</h2>
             </div>
             <p className="text-gray-600 mb-6">See which college programs are ranked nationally</p>
 
