@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+export const dynamic = 'force-dynamic'
+
 export default function TestDatabasePage() {
   const [status, setStatus] = useState('Testing connection...')
   const [error, setError] = useState('')

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Search, Calendar, Trophy, TrendingUp, ExternalLink, RefreshCw, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
+export const dynamic = 'force-dynamic'
+
 interface SavedConference {
   id: string
   url: string
