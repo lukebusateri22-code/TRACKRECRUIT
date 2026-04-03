@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     const { url, endpoint, data } = body
     
     // Handle different endpoints
-    const scraperUrl = process.env.SCRAPER_URL || 'http://localhost:5001'
+    const scraperUrl = process.env.SCRAPER_URL || 'http://localhost:8080'
     let flaskUrl = `${scraperUrl}/analyze`
     let requestData = { url }
     
