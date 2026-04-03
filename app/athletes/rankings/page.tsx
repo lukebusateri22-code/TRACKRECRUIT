@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, TrendingUp, TrendingDown, Minus, Trophy, Filter } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function AthleteRankings() {
   const [selectedEvent, setSelectedEvent] = useState('400m')
@@ -84,7 +83,7 @@ export default function AthleteRankings() {
   const availableStates = ['All States', ...new Set(rankings[selectedEvent as keyof typeof rankings]?.map(r => r.location) || [])]
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -276,6 +275,6 @@ export default function AthleteRankings() {
         </div>
       </div>
     </div>
-    </RoleGuard>
+    
   )
 }

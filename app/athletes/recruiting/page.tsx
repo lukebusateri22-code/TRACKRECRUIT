@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Calendar, DollarSign, MapPin, Trophy, Star, CheckCircle, XCircle, Clock, TrendingUp, Users, GraduationCap } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 interface School {
   id: string
@@ -215,7 +214,7 @@ export default function Recruiting() {
   const selectedSchoolsData = schools.filter(s => selectedSchools.includes(s.id))
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
       <div className="min-h-screen bg-gray-50">
         {/* Navigation */}
         <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
@@ -589,6 +588,6 @@ export default function Recruiting() {
           )}
         </div>
       </div>
-    </RoleGuard>
+    
   )
 }

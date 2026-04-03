@@ -33,39 +33,39 @@ export default function HomePage() {
   const features = [
     {
       icon: Trophy,
-      title: 'Performance Tracking',
-      description: 'Track your personal records and performance data. No manual data entry required.',
+      title: 'Conference Analytics',
+      description: 'Access complete TFRRS conference data. View top 8 athletes per event across all NCAA conferences.',
       color: 'bg-yellow-500'
     },
     {
-      icon: Video,
-      title: 'Video Uploads',
-      description: 'Upload highlight videos and game film. Coaches see what you can do.',
-      color: 'bg-red-500'
-    },
-    {
-      icon: Target,
-      title: 'Goal Tracking',
-      description: 'Set performance goals, track meets, and visualize your progress.',
-      color: 'bg-orange-500'
+      icon: TrendingUp,
+      title: 'National College Rankings',
+      description: 'Browse 431 NCAA D1 track & field programs ranked by USTFCCCA. Men\'s and Women\'s teams.',
+      color: 'bg-purple-500'
     },
     {
       icon: Search,
-      title: 'College Search',
-      description: 'Find colleges that match your athletic and academic profile.',
+      title: 'College Database',
+      description: 'Comprehensive database of NCAA colleges with recruiting standards and coach contacts.',
       color: 'bg-blue-500'
     },
     {
-      icon: MessageSquare,
-      title: 'Direct Messaging',
-      description: 'Message college coaches directly. Build relationships.',
-      color: 'bg-green-500'
+      icon: Target,
+      title: 'Performance Tracking',
+      description: 'Track your personal records and performance data. Import from Athletic.net and MileSplit.',
+      color: 'bg-orange-500'
     },
     {
-      icon: TrendingUp,
-      title: 'Live Rankings',
-      description: 'National and state rankings. See where you stack up.',
-      color: 'bg-purple-500'
+      icon: Video,
+      title: 'Video Highlights',
+      description: 'Upload highlight videos from YouTube or direct upload. Showcase your talent to coaches.',
+      color: 'bg-red-500'
+    },
+    {
+      icon: MessageSquare,
+      title: 'Coach Connections',
+      description: 'Direct messaging with college coaches. Build relationships and get recruited.',
+      color: 'bg-green-500'
     }
   ]
 

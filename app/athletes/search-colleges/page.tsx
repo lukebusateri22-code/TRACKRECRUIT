@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Search, Filter, MapPin, Trophy, GraduationCap, Star, TrendingUp, X, DollarSign, Users } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function AthleteCollegeSearch() {
   const [showFilters, setShowFilters] = useState(true)
@@ -106,7 +105,7 @@ export default function AthleteCollegeSearch() {
   const sizes = ['Any Size', 'Small (<5k)', 'Medium (5k-15k)', 'Large (15k+)']
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
       <div className="min-h-screen bg-gray-50">
         {/* Navigation */}
         <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
@@ -349,6 +348,6 @@ export default function AthleteCollegeSearch() {
           </div>
         </div>
       </div>
-    </RoleGuard>
+    
   )
 }

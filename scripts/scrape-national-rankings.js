@@ -37,46 +37,144 @@ async function scrapeRankings(url, gender) {
   try {
     const https = require('https')
     
-    // Fetch the page HTML
+    // Fetch the page HTML with proper headers
     const html = await new Promise((resolve, reject) => {
-      https.get(url, (res) => {
+      const options = {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+        }
+      }
+      
+      https.get(url, options, (res) => {
         let data = ''
         res.on('data', (chunk) => { data += chunk })
         res.on('end', () => resolve(data))
       }).on('error', reject)
     })
     
-    // Simple regex-based parsing for team rankings
-    // This is a basic implementation - adjust regex patterns based on actual HTML structure
+    console.log(`   📄 Downloaded ${html.length} bytes of HTML`)
+    
     const rankings = []
     
-    // Look for ranking patterns like: "1. Team Name - Points"
-    // Adjust these patterns based on the actual USTFCCCA website structure
-    const rankingPattern = /(\d+)\.\s+([A-Za-z\s&]+?)(?:\s+[-–]\s+(\d+(?:\.\d+)?))?\s*(?:<|$)/g
+    // Strategy 1: Look for table rows with ranking data
+    // Pattern: <tr><td>1</td><td>Team Name</td><td>Points</td></tr>
+    const tableRowPattern = /<tr[^>]*>[\s\S]*?<td[^>]*>(\d+)<\/td>[\s\S]*?<td[^>]*>([^<]+)<\/td>[\s\S]*?<td[^>]*>([\d.]+)<\/td>[\s\S]*?<\/tr>/gi
     let match
     
-    while ((match = rankingPattern.exec(html)) !== null) {
-      rankings.push({
-        rank: parseInt(match[1]),
-        team: match[2].trim(),
-        points: match[3] ? parseFloat(match[3]) : null
-      })
+    while ((match = tableRowPattern.exec(html)) !== null) {
+      const rank = parseInt(match[1])
+      const team = match[2].trim().replace(/&amp;/g, '&')
+      const points = parseFloat(match[3])
+      
+      if (rank && team && !isNaN(points)) {
+        rankings.push({ rank, team, points })
+      }
     }
+    
+    // Strategy 2: Look for div-based rankings
+    if (rankings.length === 0) {
+      console.log(`   🔄 Trying alternative parsing strategy...`)
+      const divPattern = /<div[^>]*class="[^"]*rank[^"]*"[^>]*>[\s\S]*?(\d+)[\s\S]*?<\/div>[\s\S]*?<div[^>]*>([^<]+)<\/div>[\s\S]*?<div[^>]*>([\d.]+)<\/div>/gi
+      
+      while ((match = divPattern.exec(html)) !== null) {
+        const rank = parseInt(match[1])
+        const team = match[2].trim().replace(/&amp;/g, '&')
+        const points = parseFloat(match[3])
+        
+        if (rank && team && !isNaN(points)) {
+          rankings.push({ rank, team, points })
+        }
+      }
+    }
+    
+    // Strategy 3: Look for list items
+    if (rankings.length === 0) {
+      console.log(`   🔄 Trying list-based parsing...`)
+      const listPattern = /<li[^>]*>[\s\S]*?(\d+)[\s.]+([A-Za-z\s&\-']+?)[\s\-–]+?([\d.]+)/gi
+      
+      while ((match = listPattern.exec(html)) !== null) {
+        const rank = parseInt(match[1])
+        const team = match[2].trim().replace(/&amp;/g, '&')
+        const points = parseFloat(match[3])
+        
+        if (rank && team && !isNaN(points)) {
+          rankings.push({ rank, team, points })
+        }
+      }
+    }
+    
+    // Strategy 4: Look for any pattern with rank, team name, and points
+    if (rankings.length === 0) {
+      console.log(`   🔄 Trying generic pattern matching...`)
+      // Match patterns like: "1 University Name 123.45" or "1. University Name - 123.45"
+      const genericPattern = /(?:^|\n|\r|>)\s*(\d+)[\s.)\-–]+([A-Z][A-Za-z\s&\-']+?)\s+[\-–]?\s*([\d.]+)(?:\s|<|$)/gm
+      
+      while ((match = genericPattern.exec(html)) !== null) {
+        const rank = parseInt(match[1])
+        const team = match[2].trim().replace(/&amp;/g, '&').replace(/\s+/g, ' ')
+        const points = parseFloat(match[3])
+        
+        // Filter out obvious false positives
+        if (rank && rank <= 100 && team && team.length > 3 && !isNaN(points) && points > 0) {
+          rankings.push({ rank, team, points })
+        }
+      }
+    }
+    
+    // Strategy 5: Extract from JSON-LD or script tags
+    if (rankings.length === 0) {
+      console.log(`   🔄 Looking for embedded JSON data...`)
+      const jsonPattern = /<script[^>]*type="application\/(?:ld\+)?json"[^>]*>([\s\S]*?)<\/script>/gi
+      
+      while ((match = jsonPattern.exec(html)) !== null) {
+        try {
+          const jsonData = JSON.parse(match[1])
+          // Look for ranking data in JSON structure
+          if (jsonData.rankings || jsonData.teams || jsonData.data) {
+            const data = jsonData.rankings || jsonData.teams || jsonData.data
+            if (Array.isArray(data)) {
+              data.forEach((item, idx) => {
+                if (item.rank && item.team) {
+                  rankings.push({
+                    rank: parseInt(item.rank),
+                    team: item.team,
+                    points: item.points || item.score || null
+                  })
+                }
+              })
+            }
+          }
+        } catch (e) {
+          // Not valid JSON or doesn't contain rankings
+        }
+      }
+    }
+    
+    // Remove duplicates and sort by rank
+    const uniqueRankings = Array.from(
+      new Map(rankings.map(r => [r.rank, r])).values()
+    ).sort((a, b) => a.rank - b.rank)
     
     const result = {
       gender,
       url,
       scraped_at: new Date().toISOString(),
-      rankings: rankings.slice(0, 25), // Top 25 teams
+      rankings: uniqueRankings.slice(0, 50), // Get top 50 teams
       last_updated: new Date().toISOString()
     }
     
-    console.log(`✅ Scraped ${rankings.length} teams`)
-    if (rankings.length > 0) {
-      console.log(`   Top 3: ${rankings.slice(0, 3).map(r => `${r.rank}. ${r.team}`).join(', ')}`)
+    console.log(`✅ Scraped ${uniqueRankings.length} teams`)
+    if (uniqueRankings.length > 0) {
+      console.log(`   Top 5: ${uniqueRankings.slice(0, 5).map(r => `${r.rank}. ${r.team} (${r.points})`).join(', ')}`)
     } else {
-      console.log(`⚠️  No rankings found - HTML structure may have changed`)
-      console.log(`   Consider updating the parsing logic or using a proper HTML parser`)
+      console.log(`⚠️  No rankings found - trying to save HTML for debugging...`)
+      // Save a sample of the HTML for debugging
+      const fs = require('fs')
+      const samplePath = `/tmp/ustfccca-${gender}-sample.html`
+      fs.writeFileSync(samplePath, html.substring(0, 50000))
+      console.log(`   📝 Saved HTML sample to: ${samplePath}`)
     }
     
     return result

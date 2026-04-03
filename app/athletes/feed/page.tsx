@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, TrendingUp, MessageSquare, Trophy, UserPlus, Calendar, Filter, Eye, Award, Heart, Share2 } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function NewsFeed() {
   const [filter, setFilter] = useState<'all' | 'schools' | 'athletes' | 'achievements'>('all')
@@ -91,7 +90,7 @@ export default function NewsFeed() {
   })
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -205,6 +204,6 @@ export default function NewsFeed() {
         </div>
       </div>
     </div>
-    </RoleGuard>
+    
   )
 }

@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth/auth-context'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Link as LinkIcon, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function AthleteSettings() {
   const { profile } = useAuth()
@@ -115,7 +114,7 @@ export default function AthleteSettings() {
   }
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-trackrecruit-yellow border-b-4 border-gray-900 py-6">
@@ -225,6 +224,6 @@ export default function AthleteSettings() {
           </div>
         </div>
       </div>
-    </RoleGuard>
+    
   )
 }

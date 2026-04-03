@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Target, TrendingUp, Calendar, Link as LinkIcon, CheckCircle, Clock, BarChart3, Activity } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 interface Meet {
   id: string
@@ -164,7 +163,7 @@ export default function Goals() {
   }
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
       <div className="min-h-screen bg-gray-50">
         {/* Navigation */}
         <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
@@ -543,6 +542,6 @@ export default function Goals() {
           </div>
         </div>
       </div>
-    </RoleGuard>
+    
   )
 }

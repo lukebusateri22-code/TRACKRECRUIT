@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Trophy, TrendingUp, MessageSquare, Calendar, Video, Star, Eye, Target, Search, GraduationCap, X, Mail, Phone, MapPin, Calendar as CalendarIcon, User } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
+import { createClient } from '@/lib/supabase/client'
 
 export default function AthleteDashboard() {
   const [userRole, setUserRole] = useState<string>('athlete')
@@ -84,37 +84,67 @@ export default function AthleteDashboard() {
 
   const stats = [
     {
-      label: 'Profile Views',
-      value: '127',
-      change: '+23 this week',
-      icon: Eye,
-      color: 'text-blue-600'
+      label: 'NCAA D1 Programs',
+      value: '431',
+      change: 'Browse rankings',
+      icon: Trophy,
+      color: 'text-purple-600',
+      link: '/athletes/national-rankings'
     },
     {
-      label: 'New Messages',
-      value: '8',
-      change: '3 from coaches',
-      icon: MessageSquare,
-      color: 'text-green-600'
+      label: 'Conferences',
+      value: '34+',
+      change: 'View all data',
+      icon: TrendingUp,
+      color: 'text-blue-600',
+      link: '/athletes/conference-info'
     },
     {
       label: 'Saved Schools',
       value: '15',
       change: '5 matches',
       icon: Star,
-      color: 'text-yellow-600'
+      color: 'text-yellow-600',
+      link: '/athletes/search-colleges'
     },
     {
       label: 'Profile Complete',
       value: '92%',
       change: 'Add videos',
-      icon: TrendingUp,
-      color: 'text-orange-600'
+      icon: Target,
+      color: 'text-orange-600',
+      link: '/athletes/settings'
     }
   ]
 
+  const supabase = createClient()
+  const [nationalRankings, setNationalRankings] = useState<any[]>([])
+  const [loadingRankings, setLoadingRankings] = useState(true)
+
+  useEffect(() => {
+    loadNationalRankings()
+  }, [])
+
+  const loadNationalRankings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('national_team_rankings')
+        .select('*')
+        .eq('gender', 'Men')
+        .single()
+      
+      if (error) throw error
+      if (data && (data as any).rankings) {
+        setNationalRankings((data as any).rankings.slice(0, 10))
+      }
+    } catch (err) {
+      console.error('Error loading rankings:', err)
+    } finally {
+      setLoadingRankings(false)
+    }
+  }
+
   return (
-    <RoleGuard allowedRole="athlete">
       <div className="min-h-screen bg-gray-50">
         {/* Navigation */}
         <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
@@ -124,7 +154,8 @@ export default function AthleteDashboard() {
                 <h1 className="text-3xl font-black text-gray-900 tracking-tight">TRACKRECRUIT</h1>
               </Link>
               <div className="flex items-center space-x-6">
-                <Link href="/athletes/rankings" className="text-gray-900 font-semibold hover:text-gray-700">Rankings</Link>
+                <Link href="/athletes/national-rankings" className="text-gray-900 font-semibold hover:text-gray-700">National Rankings</Link>
+                <Link href="/athletes/conference-info" className="text-gray-900 font-semibold hover:text-gray-700">Conference Info</Link>
                 <Link href="/athletes/search-colleges" className="text-gray-900 font-semibold hover:text-gray-700">Find Colleges</Link>
                 <Link href="/athletes/recruiting" className="text-gray-900 font-semibold hover:text-gray-700">Recruiting</Link>
                 <Link href="/athletes/goals" className="text-gray-900 font-semibold hover:text-gray-700">Goals</Link>
@@ -156,14 +187,18 @@ export default function AthleteDashboard() {
           {/* Stats */}
           <div className="grid md:grid-cols-4 gap-6 mb-8">
             {stats.map((stat, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl shadow-lg border-2 border-gray-200">
+              <Link 
+                key={index} 
+                href={stat.link}
+                className="bg-white p-6 rounded-xl shadow-lg border-2 border-gray-200 hover:border-trackrecruit-yellow transition cursor-pointer"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <stat.icon className={`w-8 h-8 ${stat.color}`} />
                   <span className="text-3xl font-black text-gray-900">{stat.value}</span>
                 </div>
                 <p className="text-sm font-semibold text-gray-600">{stat.label}</p>
                 <p className="text-xs text-gray-500 mt-1">{stat.change}</p>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -187,6 +222,44 @@ export default function AthleteDashboard() {
                 </Link>
               ))}
             </div>
+          </div>
+
+          {/* Conference Info & National Rankings */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* Conference Info Widget */}
+            <Link href="/athletes/conference-info" className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6 hover:border-trackrecruit-yellow transition">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Conference Info</h3>
+                <Trophy className="w-6 h-6 text-yellow-500" />
+              </div>
+              <p className="text-gray-600 mb-4">Learn about conference scoring and see top 8 rankings per event</p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-800 font-medium">📊 8th place scores • 1st place wins</p>
+              </div>
+            </Link>
+
+            {/* National Rankings Widget */}
+            <Link href="/athletes/national-rankings" className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6 hover:border-trackrecruit-yellow transition">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">College Track Ranking</h3>
+                <TrendingUp className="w-6 h-6 text-purple-500" />
+              </div>
+              {loadingRankings ? (
+                <p className="text-gray-500">Loading rankings...</p>
+              ) : nationalRankings.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600 mb-2">Top NCAA D1 Programs:</p>
+                  {nationalRankings.slice(0, 5).map((team: any) => (
+                    <div key={team.rank} className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-gray-900">{team.rank}. {team.team}</span>
+                    </div>
+                  ))}
+                  <p className="text-xs text-blue-600 font-medium mt-3">View all 214 teams →</p>
+                </div>
+              ) : (
+                <p className="text-gray-500">Rankings coming soon</p>
+              )}
+            </Link>
           </div>
 
           {/* Recent Activity */}
@@ -370,6 +443,5 @@ export default function AthleteDashboard() {
           </div>
         )}
       </div>
-    </RoleGuard>
   )
 }

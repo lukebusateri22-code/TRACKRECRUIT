@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Save, Upload, X, Check, AlertCircle, Camera } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function EditProfile() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
@@ -76,7 +75,7 @@ export default function EditProfile() {
 
   
   return (
-    <RoleGuard allowedRole="athlete">
+    
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -421,6 +420,6 @@ export default function EditProfile() {
         </div>
       </div>
     </div>
-    </RoleGuard>
+    
   )
 }

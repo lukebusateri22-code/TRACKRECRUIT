@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, DollarSign, TrendingUp, AlertCircle, Calculator, Award } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function ScholarshipCalculator() {
   const [selectedSchool, setSelectedSchool] = useState('michigan')
@@ -58,7 +57,7 @@ export default function ScholarshipCalculator() {
   const selectedSchoolData = schools.find(s => s.id === selectedSchool)
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -247,6 +246,6 @@ export default function ScholarshipCalculator() {
         </div>
       </div>
     </div>
-    </RoleGuard>
+    
   )
 }

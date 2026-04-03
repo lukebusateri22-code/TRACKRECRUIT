@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, GraduationCap, MapPin, TrendingUp, Star, Filter, CheckCircle, XCircle, AlertCircle, MessageSquare } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function EligibleSchools() {
   const [selectedEvent, setSelectedEvent] = useState('400m')
@@ -138,7 +137,7 @@ export default function EligibleSchools() {
   const ineligibleSchools = schools.filter(s => !s.eligible)
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -380,6 +379,6 @@ export default function EligibleSchools() {
         </div>
       </div>
     </div>
-    </RoleGuard>
+    
   )
 }

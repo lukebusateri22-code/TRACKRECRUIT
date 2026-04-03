@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, AlertCircle, CheckCircle } from 'lucide-react'
-import RoleGuard from '@/components/RoleGuard'
 
 export default function UpdatePR() {
   const [userRole, setUserRole] = useState<string>('athlete')
@@ -39,7 +38,7 @@ export default function UpdatePR() {
   }
 
   return (
-    <RoleGuard allowedRole="athlete">
+    
       <div className="min-h-screen bg-gray-50">
         {/* Navigation */}
         <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
@@ -181,6 +180,6 @@ export default function UpdatePR() {
           </div>
         </div>
       </div>
-    </RoleGuard>
+    
   )
 }
