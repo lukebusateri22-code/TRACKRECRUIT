@@ -37,67 +37,40 @@ export default function ConferencesPage() {
   }, [])
 
   const loadConferences = async () => {
-    console.log('🚀 Starting loadConferences...')
     try {
       setLoading(true)
       setError('')
-      console.log('✅ Loading state set to true')
       
-      // Check if supabase client exists
-      console.log('🔍 Checking supabase client...')
-      if (!supabase) {
-        throw new Error('Supabase client not initialized')
-      }
-      console.log('✅ Supabase client exists')
+      // Quick check for database connection with shorter timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database connection timeout')), 5000)
+      )
       
-      // Check environment variables
-      console.log('🔍 Environment variables:')
-      console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing')
-      console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing')
-      
-      // Add timeout to prevent stalling
-      console.log('⏰ Setting up 10-second timeout...')
-      const timeoutPromise = new Promise((_, reject) => {
-        console.log('⏰ Timeout started')
-        setTimeout(() => {
-          console.log('⏰ Timeout triggered!')
-          reject(new Error('Database connection timeout after 10 seconds'))
-        }, 10000)
-      })
-      
-      console.log('📊 Starting database query...')
       const dataPromise = supabase
         .from('tffrs_conferences')
         .select('id, url, conference_name, scraped_at, data')
         .order('scraped_at', { ascending: false })
       
-      console.log('⏳ Waiting for database response...')
       const { data, error } = await Promise.race([dataPromise, timeoutPromise]) as any
       
-      console.log('📉 Database response received:')
-      console.log('Data:', data)
-      console.log('Error:', error)
-      
       if (error) {
-        console.error('❌ Database error:', error)
+        // If table doesn't exist, show helpful message
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          setError('Database tables not created yet. Please run the SQL setup script in Supabase.')
+          return
+        }
         throw error
       }
       
-      console.log('✅ Data loaded successfully, setting conferences...')
       setConferences(data || [])
-      console.log('✅ Conferences state updated')
     } catch (err: any) {
-      console.error('💥 Conference loading error:', err)
-      console.error('💥 Error details:', {
-        message: err.message,
-        stack: err.stack,
-        code: err.code
-      })
-      setError(err.message || 'Failed to load conferences')
+      if (err.message?.includes('timeout')) {
+        setError('Database connection timeout. Please check your connection and try again.')
+      } else {
+        setError(err.message || 'Failed to load conferences')
+      }
     } finally {
-      console.log('🏁 Setting loading to false...')
       setLoading(false)
-      console.log('✅ Load conferences complete')
     }
   }
 
@@ -275,19 +248,19 @@ export default function ConferencesPage() {
           <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-12 text-center">
             <Trophy className="w-20 h-20 text-gray-300 mx-auto mb-6" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {searchTerm ? 'No conferences found' : 'No conferences saved yet'}
+              {searchTerm ? 'No matching conferences found' : 'No conferences have been added yet'}
             </h3>
             <p className="text-gray-600 mb-6">
               {searchTerm 
-                ? 'Try adjusting your search terms' 
-                : 'Start by scraping your first TFFRS conference'}
+                ? 'Please refine your search criteria' 
+                : 'To get started, please add your first TFFRS conference'}
             </p>
             {!searchTerm && (
               <Link
                 href="/coaches/tffrs-analytics"
                 className="inline-flex items-center bg-trackrecruit-yellow text-gray-900 px-6 py-3 rounded-lg font-bold hover:bg-yellow-400 transition"
               >
-                Scrape First Conference
+                Add First Conference
               </Link>
             )}
           </div>
