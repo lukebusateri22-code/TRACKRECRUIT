@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Trophy, ChevronLeft, ChevronRight } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
 
 export default function NationalRankingsPage() {
   const [rankings, setRankings] = useState<any[]>([])
@@ -12,8 +12,6 @@ export default function NationalRankingsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 25
 
-  const supabase = createClient()
-
   useEffect(() => {
     loadRankings()
   }, [selectedGender])
@@ -21,6 +19,19 @@ export default function NationalRankingsPage() {
   const loadRankings = async () => {
     setLoading(true)
     try {
+      // Create client without auth to avoid lock issues
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          }
+        }
+      )
+      
       const { data, error } = await supabase
         .from('national_team_rankings')
         .select('*')
@@ -60,7 +71,7 @@ export default function NationalRankingsPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center">
               <Link
-                href="/athletes/profile"
+                href="/athletes"
                 className="mr-4 p-2 rounded-lg hover:bg-gray-900 hover:text-white transition"
               >
                 <ArrowLeft className="w-5 h-5" />

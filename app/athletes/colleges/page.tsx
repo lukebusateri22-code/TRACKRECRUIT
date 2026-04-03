@@ -108,7 +108,7 @@ export default function CollegesPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center">
               <Link
-                href="/athletes/profile"
+                href="/athletes"
                 className="mr-4 p-2 rounded-lg hover:bg-gray-900 hover:text-white transition"
               >
                 <ArrowLeft className="w-5 h-5" />
