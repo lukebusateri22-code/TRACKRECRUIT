@@ -27,8 +27,9 @@ export default function ConferenceListPage() {
     try {
       const { data, error } = await supabase
         .from('tffrs_conferences')
-        .select('*')
+        .select('id, conference_name, url')
         .order('conference_name', { ascending: true })
+        .limit(100)
       
       if (error) throw error
       setConferences(data || [])

@@ -22,12 +22,11 @@ BEGIN
     
     IF admin_user_id IS NOT NULL THEN
         -- Update or insert profile with admin role
-        INSERT INTO profiles (user_id, email, role, full_name)
+        INSERT INTO profiles (user_id, email, role)
         VALUES (
             admin_user_id,
             'lukebusateri22@gmail.com',
-            'admin',
-            'Luke Busateri'
+            'admin'
         )
         ON CONFLICT (user_id) 
         DO UPDATE SET role = 'admin';
