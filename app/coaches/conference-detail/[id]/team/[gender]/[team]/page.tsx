@@ -351,45 +351,6 @@ export default function ConferenceTeamDetailPage() {
             </div>
           )}
         </div>
-
-        {/* Conference Context */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Conference Context</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">Top 5 {gender} Teams</h3>
-              <div className="space-y-2">
-                {teams.slice(0, 5).map((team: any, index: number) => (
-                  <div key={index} className={`flex items-center justify-between p-2 rounded ${
-                    team.team === teamName ? 'bg-trackrecruit-yellow font-bold' : 'bg-gray-50'
-                  }`}>
-                    <div className="flex items-center">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 ${
-                        team.rank === 1 ? 'bg-yellow-400 text-gray-900' :
-                        team.rank === 2 ? 'bg-gray-300 text-gray-900' :
-                        team.rank === 3 ? 'bg-orange-400 text-white' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {team.rank}
-                      </div>
-                      <span className="text-gray-900">{team.team}</span>
-                    </div>
-                    <span className="font-black text-gray-900">{team.total}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-3">Conference Info</h3>
-              <div className="space-y-2 text-gray-600">
-                <p><strong>Conference:</strong> {scrapedData.conference_name || 'Unknown'}</p>
-                <p><strong>Total {gender} Teams:</strong> {teams.length}</p>
-                <p><strong>Total Athletes:</strong> {scrapedData.summary?.total_athletes || 0}</p>
-                <p><strong>Total Events:</strong> {scrapedData.summary?.total_events || 0}</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

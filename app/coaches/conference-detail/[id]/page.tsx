@@ -274,16 +274,7 @@ export default function ConferenceDetailPage() {
           </div>
         </div>
 
-        {/* Raw Data Display */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Complete Scraped Data</h3>
-          <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto max-h-96 overflow-y-auto">
-            <pre className="text-xs">
-              {JSON.stringify(scrapedData, null, 2)}
-            </pre>
-          </div>
-        </div>
-      </div>
+              </div>
     </div>
   )
 }
