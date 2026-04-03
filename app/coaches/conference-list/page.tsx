@@ -26,16 +26,31 @@ export default function ConferenceListPage() {
 
   const loadConferences = async () => {
     try {
+      console.log('🔍 Starting to load conferences...')
       const supabase = createClient()
+      
+      // Debug environment variables
+      console.log('📋 Environment check:')
+      console.log('  NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing')
+      console.log('  NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing')
+      
       const { data, error } = await supabase
         .from('tffrs_conferences')
         .select('id, url, conference_name, scraped_at')
         .order('conference_name', { ascending: true })
 
-      if (error) throw error
+      console.log('📊 Query result:', { data, error })
+      console.log('📊 Data length:', data?.length || 0)
+
+      if (error) {
+        console.error('❌ Database error:', error)
+        throw error
+      }
+      
+      console.log('✅ Conferences loaded:', data?.length || 0)
       setConferences(data || [])
     } catch (err: any) {
-      console.error('Error loading conferences:', err)
+      console.error('💥 Load conferences error:', err)
     } finally {
       setLoading(false)
     }
@@ -44,6 +59,13 @@ export default function ConferenceListPage() {
   const filteredConferences = conferences.filter(conf =>
     conf.conference_name.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  console.log('🎯 Current state:', { 
+    loading, 
+    conferencesLength: conferences.length, 
+    filteredLength: filteredConferences.length,
+    searchTerm 
+  })
 
   if (loading) {
     return (

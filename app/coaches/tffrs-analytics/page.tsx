@@ -12,13 +12,17 @@ interface TeamRanking {
 }
 
 interface ConferenceData {
-  men: TeamRanking[]
-  women: TeamRanking[]
-  conference_name: string
-  last_updated: string
+  rankings?: {
+    Men?: TeamRanking[]
+    Women?: TeamRanking[]
+  }
+  conference_name?: string
+  last_updated?: string
   event_breakdown?: any
   summary?: any
   categories?: string[]
+  men?: TeamRanking[]  // Fallback for compatibility
+  women?: TeamRanking[]  // Fallback for compatibility
 }
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6']
@@ -201,25 +205,25 @@ export default function TFFRSAnalytics() {
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="text-center">
                   <div className="text-3xl font-black text-trackrecruit-yellow">
-                    {conferenceData.men.length}
+                    {conferenceData.rankings?.Men?.length || 0}
                   </div>
                   <p className="text-gray-600">Men's Teams</p>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-black text-trackrecruit-yellow">
-                    {conferenceData.women.length}
+                    {conferenceData.rankings?.Women?.length || 0}
                   </div>
                   <p className="text-gray-600">Women's Teams</p>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-black text-trackrecruit-yellow">
-                    {conferenceData.men.length + conferenceData.women.length}
+                    {conferenceData.summary?.total_athletes || 0}
                   </div>
-                  <p className="text-gray-600">Total Teams</p>
+                  <p className="text-gray-600">Total Athletes</p>
                 </div>
               </div>
               <p className="text-sm text-gray-500 mt-4">
-                Last updated: {new Date(conferenceData.last_updated).toLocaleString()}
+                Last updated: {conferenceData.last_updated ? new Date(conferenceData.last_updated).toLocaleString() : 'Unknown'}
               </p>
             </div>
 
@@ -240,7 +244,7 @@ export default function TFFRSAnalytics() {
                     </tr>
                   </thead>
                   <tbody>
-                    {conferenceData.men.map((team) => (
+                    {(conferenceData.rankings?.Men || conferenceData.men || []).map((team) => (
                       <tr key={team.team} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
@@ -287,7 +291,7 @@ export default function TFFRSAnalytics() {
                     </tr>
                   </thead>
                   <tbody>
-                    {conferenceData.women.map((team) => (
+                    {(conferenceData.rankings?.Women || conferenceData.women || []).map((team) => (
                       <tr key={team.team} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
