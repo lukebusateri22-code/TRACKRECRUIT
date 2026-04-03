@@ -154,11 +154,117 @@ export default function ConferenceDetailPage() {
           </div>
         </div>
 
+        {/* Team Rankings */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Men's Rankings */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Men's Team Rankings</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-bold text-gray-900">Rank</th>
+                    <th className="text-left py-3 px-4 font-bold text-gray-900">Team</th>
+                    <th className="text-right py-3 px-4 font-bold text-gray-900">Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {men.slice(0, 20).map((team: any, index: number) => (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                          (team.rank || index + 1) === 1 ? 'bg-yellow-400 text-gray-900' :
+                          (team.rank || index + 1) === 2 ? 'bg-gray-300 text-gray-900' :
+                          (team.rank || index + 1) === 3 ? 'bg-orange-400 text-white' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {team.rank || index + 1}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-gray-900">{team.team || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {men.length > 20 && (
+                <div className="text-center py-3 text-gray-600 text-sm">
+                  Showing top 20 of {men.length} teams
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Women's Rankings */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Women's Team Rankings</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-bold text-gray-900">Rank</th>
+                    <th className="text-left py-3 px-4 font-bold text-gray-900">Team</th>
+                    <th className="text-right py-3 px-4 font-bold text-gray-900">Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {women.slice(0, 20).map((team: any, index: number) => (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                          (team.rank || index + 1) === 1 ? 'bg-yellow-400 text-gray-900' :
+                          (team.rank || index + 1) === 2 ? 'bg-gray-300 text-gray-900' :
+                          (team.rank || index + 1) === 3 ? 'bg-orange-400 text-white' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {team.rank || index + 1}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-gray-900">{team.team || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-right font-black text-gray-900">{team.total_points || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {women.length > 20 && (
+                <div className="text-center py-3 text-gray-600 text-sm">
+                  Showing top 20 of {women.length} teams
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Statistics */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Conference Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {scrapedData.summary?.total_athletes || 0}
+              </div>
+              <div className="text-gray-600">Total Athletes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">
+                {scrapedData.summary?.total_events || 0}
+              </div>
+              <div className="text-gray-600">Total Events</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                {scrapedData.summary?.unique_teams || 0}
+              </div>
+              <div className="text-gray-600">Unique Teams</div>
+            </div>
+          </div>
+        </div>
+
         {/* Raw Data Display */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Complete Scraped Data</h2>
-          <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Complete Scraped Data</h3>
+          <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto max-h-96 overflow-y-auto">
+            <pre className="text-xs">
               {JSON.stringify(scrapedData, null, 2)}
             </pre>
           </div>
