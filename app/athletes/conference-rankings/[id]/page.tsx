@@ -31,6 +31,7 @@ export default function ConferenceRankingsPage() {
   const [performances, setPerformances] = useState<Performance[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedEvent, setSelectedEvent] = useState<string>('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('All')
   const supabase = createClient()
 
   useEffect(() => {
@@ -92,8 +93,18 @@ export default function ConferenceRankingsPage() {
     eventGroups[perf.event_name].push(perf)
   })
 
-  const events = Object.keys(eventGroups).sort()
+  // Filter events by category
+  const filteredEvents = Object.keys(eventGroups).filter(eventName => {
+    if (categoryFilter === 'All') return true
+    const eventPerfs = eventGroups[eventName]
+    return eventPerfs.some(p => p.event_category === categoryFilter)
+  }).sort()
+
+  const events = filteredEvents
   const selectedPerformances = selectedEvent ? eventGroups[selectedEvent] || [] : []
+  
+  // Get unique categories
+  const categories = ['All', ...Array.from(new Set(performances.map(p => p.event_category))).sort()]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -158,8 +169,39 @@ export default function ConferenceRankingsPage() {
             {/* Event Selector */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-4 sticky top-4">
-                <h3 className="font-bold text-gray-900 mb-4">Select Event</h3>
-                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                <h3 className="font-bold text-gray-900 mb-4">Filter Events</h3>
+                
+                {/* Category Filter */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Event Category
+                  </label>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => {
+                      setCategoryFilter(e.target.value)
+                      // Reset selected event when changing category
+                      const newFilteredEvents = Object.keys(eventGroups).filter(eventName => {
+                        if (e.target.value === 'All') return true
+                        const eventPerfs = eventGroups[eventName]
+                        return eventPerfs.some(p => p.event_category === e.target.value)
+                      }).sort()
+                      if (newFilteredEvents.length > 0) {
+                        setSelectedEvent(newFilteredEvents[0])
+                      }
+                    }}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg font-medium focus:border-trackrecruit-yellow focus:outline-none"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <h4 className="font-bold text-gray-900 mb-2 text-sm">Select Event</h4>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
                   {events.map((event) => (
                     <button
                       key={event}
