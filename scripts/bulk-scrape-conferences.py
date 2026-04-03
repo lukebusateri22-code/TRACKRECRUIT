@@ -18,11 +18,37 @@ SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'your-service-role-key')
 
 # Conference URLs to scrape
 CONFERENCE_URLS = [
-    "https://www.tfrrs.org/lists/2835.html",
-    "https://www.tfrrs.org/lists/5655/Big_12_Outdoor_Performance_List",
-    "https://www.tfrrs.org/lists/2288.html",
-    "https://www.tfrrs.org/lists/5675/Ohio_Valley_OVC_Outdoor_Performance_List",
-    # Add more conference URLs here
+    "https://tf.tfrrs.org/lists/5651/ACC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5653/ASUN_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5652/America_East_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5654/Atlantic_10_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5656/BIG_EAST_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5655/Big_12_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5657/Big_Sky_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5658/Big_South_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5659/Big_Ten_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5660/Big_West_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5661/CAA_Colonial_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5662/Conference_USA_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5664/Horizon_League_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5665/IC4A_ECAC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5666/Ivy_League_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5667/MEAC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5668/Metro_Atlantic_MAAC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5670/Mid_American_MAC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5671/Missouri_Valley_MVC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5672/Mountain_West_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5674/Northeast_Conference_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5675/Ohio_Valley_OVC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5677/Patriot_League_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5678/SEC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5682/SWAC_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5679/Southern_Conference_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5680/Southland_Conference_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5681/Sun_Belt_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5683/The_American_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5684/The_Summit_League_Outdoor_Performance_List",
+    "https://tf.tfrrs.org/lists/5685/WAC_Outdoor_Performance_List"
 ]
 
 def scrape_conference(url):
