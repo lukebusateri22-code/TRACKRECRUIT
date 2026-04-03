@@ -29,15 +29,25 @@ export default function ConferencesPage() {
   const loadConferences = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      setError('')
+      
+      // Add timeout to prevent stalling
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database connection timeout')), 10000)
+      )
+      
+      const dataPromise = supabase
         .from('tffrs_conferences')
         .select('id, url, conference_name, scraped_at, data')
         .order('scraped_at', { ascending: false })
-
+      
+      const { data, error } = await Promise.race([dataPromise, timeoutPromise]) as any
+      
       if (error) throw error
       setConferences(data || [])
     } catch (err: any) {
       setError(err.message || 'Failed to load conferences')
+      console.error('Conference loading error:', err)
     } finally {
       setLoading(false)
     }
