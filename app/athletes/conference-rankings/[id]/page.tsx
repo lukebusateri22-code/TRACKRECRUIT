@@ -137,7 +137,21 @@ export default function ConferenceRankingsPage() {
           </div>
         ) : events.length === 0 ? (
           <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-12 text-center">
-            <p className="text-gray-600">No rankings data available for this conference</p>
+            <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No Rankings Data Available</h3>
+            <p className="text-gray-600 mb-6">
+              Performance data for this conference hasn't been scraped yet.
+            </p>
+            {conference?.url && (
+              <a
+                href={conference.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center bg-trackrecruit-yellow text-gray-900 px-6 py-3 rounded-lg font-bold hover:bg-yellow-400 transition"
+              >
+                View on TFRRS <ExternalLink className="w-4 h-4 ml-2" />
+              </a>
+            )}
           </div>
         ) : (
           <div className="grid lg:grid-cols-4 gap-6">

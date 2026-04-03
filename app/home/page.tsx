@@ -100,73 +100,53 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-gray-900 to-gray-800 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-5xl md:text-6xl font-black mb-6 leading-tight">
-                The Complete Track & Field Recruiting Platform
-              </h2>
-              <p className="text-xl text-gray-300 mb-8">
-                Track your performance data, upload videos, set goals, and connect directly with college coaches. Everything you need to get recruited.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/signup?type=athlete" className="bg-trackrecruit-yellow text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-yellow-400 transition flex items-center justify-center">
-                  I'm an Athlete
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
-                <Link href="/signup?type=coach" className="bg-white text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition flex items-center justify-center">
-                  I'm a Coach
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
-              </div>
-              <div className="mt-8 flex items-center space-x-8 text-sm">
-                <div>
-                  <div className="text-3xl font-black text-trackrecruit-yellow">10,000+</div>
-                  <p className="text-gray-400">Active Athletes</p>
-                </div>
-                <div>
-                  <div className="text-3xl font-black text-trackrecruit-yellow">1,200+</div>
-                  <p className="text-gray-400">College Programs</p>
-                </div>
-                <div>
-                  <div className="text-3xl font-black text-trackrecruit-yellow">500+</div>
-                  <p className="text-gray-400">Commitments</p>
-                </div>
-              </div>
+      <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-24 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12">
+            <div className="inline-block bg-trackrecruit-yellow text-gray-900 px-4 py-2 rounded-full font-bold text-sm mb-6">
+              🏆 Complete NCAA D1 Conference & Rankings Data
             </div>
-            <div className="bg-trackrecruit-yellow rounded-2xl p-8 border-4 border-gray-900">
-              <div className="bg-white rounded-xl p-6 shadow-xl">
-                <div className="flex items-center mb-4">
-                  <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center text-trackrecruit-yellow font-black text-2xl">
-                    JD
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="font-bold text-xl text-gray-900">Jordan Davis</h3>
-                    <p className="text-gray-600">Class of 2027 • Lincoln High</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-semibold">400m PR</p>
-                    <p className="text-2xl font-black text-gray-900">48.2s</p>
-                    <p className="text-xs text-green-600 font-bold">National #4</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-semibold">800m PR</p>
-                    <p className="text-2xl font-black text-gray-900">1:52.8</p>
-                    <p className="text-xs text-green-600 font-bold">National #12</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-semibold">GPA</p>
-                    <p className="text-2xl font-black text-gray-900">3.8</p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 font-semibold">Coaches</p>
-                    <p className="text-2xl font-black text-gray-900">18</p>
-                  </div>
-                </div>
-              </div>
+            <h2 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
+              Your Track & Field<br />
+              <span className="text-trackrecruit-yellow">Recruiting Hub</span>
+            </h2>
+            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+              Access 431 NCAA D1 programs, 34+ conference analytics, and connect with college coaches
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <Link href="/signup?type=athlete" className="bg-trackrecruit-yellow text-gray-900 px-10 py-5 rounded-xl font-black text-lg hover:bg-yellow-400 transition flex items-center justify-center shadow-2xl">
+              Start as Athlete
+              <ArrowRight className="ml-2 w-6 h-6" />
+            </Link>
+            <Link href="/signup?type=coach" className="bg-white text-gray-900 px-10 py-5 rounded-xl font-black text-lg hover:bg-gray-100 transition flex items-center justify-center shadow-2xl">
+              I'm a Coach
+              <ArrowRight className="ml-2 w-6 h-6" />
+            </Link>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-xl p-6 text-center">
+              <div className="text-4xl font-black text-trackrecruit-yellow mb-2">431</div>
+              <p className="text-gray-300 font-semibold">NCAA D1 Programs</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-xl p-6 text-center">
+              <div className="text-4xl font-black text-trackrecruit-yellow mb-2">34+</div>
+              <p className="text-gray-300 font-semibold">Conference Analytics</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-xl p-6 text-center">
+              <div className="text-4xl font-black text-trackrecruit-yellow mb-2">Real-Time</div>
+              <p className="text-gray-300 font-semibold">TFRRS Data</p>
             </div>
           </div>
         </div>

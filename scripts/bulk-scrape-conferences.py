@@ -11,11 +11,13 @@ import sys
 from datetime import datetime
 import os
 
-# Load environment variables from .env file
+# Load environment variables from .env.local file
 def load_env():
-    with open('.env', 'r') as f:
+    SUPABASE_URL = None
+    SUPABASE_KEY = None
+    with open('.env.local', 'r') as f:
         for line in f:
-            if line.startswith('SUPABASE_URL='):
+            if line.startswith('NEXT_PUBLIC_SUPABASE_URL='):
                 SUPABASE_URL = line.split('=')[1].strip()
             elif line.startswith('SUPABASE_SERVICE_ROLE_KEY='):
                 SUPABASE_KEY = line.split('=')[1].strip()
