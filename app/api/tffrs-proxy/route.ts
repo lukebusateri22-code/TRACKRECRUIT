@@ -198,23 +198,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(responseData)
     }
     
-    // Transform raw TFFRS data into the format expected by frontend
+    // Save the exact raw scraper data
     if (responseData.success) {
-      console.log('🔄 Transforming TFFRS data...')
-      const transformedData = transformTFFRSData(responseData)
-      console.log('✅ Data transformed successfully!')
-      console.log('📊 Transformed data sample:', { 
-        menCount: transformedData.men.length, 
-        womenCount: transformedData.women.length,
-        conference: transformedData.conference_name
+      console.log('� Saving raw TFFRS data to database...')
+      console.log('📊 Raw data sample:', { 
+        menCount: responseData.men?.length || 0, 
+        womenCount: responseData.women?.length || 0,
+        conference: responseData.conference_name
       })
       
-      // Save to database (don't await - let it happen in background)
-      saveToDatabase(url, responseData, transformedData).catch(err => {
-        console.error('❌ Background save failed:', err)
-      })
+      // Save raw data to database
+      try {
+        const { data: savedConference, error: saveError } = await supabase
+          .from('tffrs_conferences')
+          .upsert({
+            url,
+            conference_name: responseData.conference_name || 'Unknown Conference',
+            data: responseData, // Save the exact raw response
+            scraped_at: new Date().toISOString()
+          }, {
+            onConflict: 'url'
+          })
+          .select()
+          .single()
+
+        if (saveError) {
+          console.error('❌ Save failed:', saveError)
+        } else {
+          console.log('✅ Conference saved successfully:', savedConference.id)
+        }
+      } catch (err) {
+        console.error('❌ Database save error:', err)
+      }
       
-      return NextResponse.json(transformedData)
+      return NextResponse.json(responseData)
     }
 
     console.log('❌ Data transformation failed - missing success')

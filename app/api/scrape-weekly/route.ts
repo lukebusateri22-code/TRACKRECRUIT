@@ -8,7 +8,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-const SCRAPER_URL = process.env.SCRAPER_URL || 'http://localhost:5001'
+const SCRAPER_URL = process.env.SCRAPER_URL || 'http://localhost:8080'
 
 // GET - Run weekly scraper for all active conferences
 export async function GET(request: NextRequest) {
@@ -21,12 +21,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get all conferences that need scraping
+    // Get all conferences for weekly scraping
     const { data: conferences, error } = await supabase
-      .from('tffrs_conference_watchlist')
-      .select('*')
-      .eq('active', true)
-      .lte('next_scrape_at', new Date().toISOString())
+      .from('tffrs_conferences')
+      .select('id, url, conference_name')
+      .order('scraped_at', { ascending: true })
 
     if (error) {
       console.error('Error fetching watchlist:', error)
