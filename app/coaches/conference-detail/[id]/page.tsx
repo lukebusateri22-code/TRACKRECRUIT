@@ -82,7 +82,7 @@ export default function ConferenceDetailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Link
-                href="/coaches/conference-list"
+                href="/coaches/conference-analytics"
                 className="mr-4 p-2 rounded-lg hover:bg-gray-900 hover:text-white transition"
               >
                 <ArrowLeft className="w-5 h-5" />
