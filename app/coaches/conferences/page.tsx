@@ -19,23 +19,19 @@ export default function ConferencesPage() {
   console.log('🔄 ConferencesPage component rendering...')
   
   const [conferences, setConferences] = useState<SavedConference[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date')
-  const [mounted, setMounted] = useState(false)
 
-  console.log('📊 Component state:', { mounted, loading, error, conferencesLength: conferences.length })
+  console.log('📊 Component state:', { loading, error, conferencesLength: conferences.length })
 
   const supabase = createClient()
   console.log('🔌 Supabase client created')
 
   useEffect(() => {
-    console.log('🎯 Component mounted, starting setup...')
-    setMounted(true)
-    console.log('✅ Mounted state set to true')
+    console.log('🎯 Component mounted, loading conferences...')
     loadConferences()
-    console.log('🚀 loadConferences called')
   }, [])
 
   const loadConferences = async () => {
@@ -126,19 +122,16 @@ export default function ConferencesPage() {
     return { men: menCount, women: womenCount, total: totalPoints }
   }
 
-  if (!mounted) {
-    console.log('⏳ Component not mounted yet, showing loading...')
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-trackrecruit-yellow border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-900 font-bold">Loading page...</p>
+          <p className="text-gray-900 font-bold">Loading conferences...</p>
         </div>
       </div>
     )
   }
-
-  console.log('🎨 Component mounted, rendering main content...')
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
