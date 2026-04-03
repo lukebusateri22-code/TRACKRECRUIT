@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, Calendar, Trophy, TrendingUp, ExternalLink } from 'lucide-react'
+import { Search, Calendar, Trophy, TrendingUp, ExternalLink, ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export const dynamic = 'force-dynamic'
@@ -84,9 +84,17 @@ export default function ConferenceListPage() {
       <nav className="bg-trackrecruit-yellow border-b-4 border-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-black text-gray-900">All Conferences</h1>
-              <p className="text-gray-700 mt-1">Complete list of scraped TFFRS conferences</p>
+            <div className="flex items-center">
+              <Link
+                href="/coaches/dashboard"
+                className="mr-4 p-2 rounded-lg hover:bg-gray-900 hover:text-white transition"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <div>
+                <h1 className="text-3xl font-black text-gray-900">All Conferences</h1>
+                <p className="text-gray-700 mt-1">Complete list of scraped TFFRS conferences</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Link

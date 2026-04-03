@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Send, Search, Paperclip, MoreVertical, Star, Filter, Bell, Phone, Mail, Calendar } from 'lucide-react'
+import { Send, Search, Paperclip, MoreVertical, Star, Filter, Bell, Phone, Mail, Calendar, ArrowLeft } from 'lucide-react'
 
 interface AthleteConversation {
   id: number
@@ -165,9 +165,17 @@ export default function CoachMessages() {
 
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-black text-gray-900 mb-2">Messages</h1>
-          <p className="text-gray-600">Communicate with prospective recruits</p>
+        <div className="mb-6 flex items-center">
+          <Link
+            href="/coaches/dashboard"
+            className="mr-4 p-2 rounded-lg hover:bg-gray-900 hover:text-white transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-black text-gray-900 mb-2">Messages</h1>
+            <p className="text-gray-600">Communicate with prospective recruits</p>
+          </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg" style={{ height: '600px' }}>

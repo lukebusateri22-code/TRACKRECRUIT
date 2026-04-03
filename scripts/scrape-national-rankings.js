@@ -35,22 +35,51 @@ async function scrapeRankings(url, gender) {
   console.log(`\n🔍 Scraping ${gender} rankings from ${url}...`)
   
   try {
-    // For now, we'll create a placeholder structure
-    // In production, you'd use puppeteer or cheerio to scrape the actual page
-    const rankings = {
+    const https = require('https')
+    
+    // Fetch the page HTML
+    const html = await new Promise((resolve, reject) => {
+      https.get(url, (res) => {
+        let data = ''
+        res.on('data', (chunk) => { data += chunk })
+        res.on('end', () => resolve(data))
+      }).on('error', reject)
+    })
+    
+    // Simple regex-based parsing for team rankings
+    // This is a basic implementation - adjust regex patterns based on actual HTML structure
+    const rankings = []
+    
+    // Look for ranking patterns like: "1. Team Name - Points"
+    // Adjust these patterns based on the actual USTFCCCA website structure
+    const rankingPattern = /(\d+)\.\s+([A-Za-z\s&]+?)(?:\s+[-–]\s+(\d+(?:\.\d+)?))?\s*(?:<|$)/g
+    let match
+    
+    while ((match = rankingPattern.exec(html)) !== null) {
+      rankings.push({
+        rank: parseInt(match[1]),
+        team: match[2].trim(),
+        points: match[3] ? parseFloat(match[3]) : null
+      })
+    }
+    
+    const result = {
       gender,
       url,
       scraped_at: new Date().toISOString(),
-      rankings: [],
+      rankings: rankings.slice(0, 25), // Top 25 teams
       last_updated: new Date().toISOString()
     }
     
-    console.log(`⚠️  Note: This is a placeholder. To scrape live data, you'll need to:`)
-    console.log(`   1. Install puppeteer: npm install puppeteer`)
-    console.log(`   2. Implement the scraping logic for the USTFCCCA website`)
-    console.log(`   3. Parse the ranking tables and extract team data`)
+    console.log(`✅ Scraped ${rankings.length} teams`)
+    if (rankings.length > 0) {
+      console.log(`   Top 3: ${rankings.slice(0, 3).map(r => `${r.rank}. ${r.team}`).join(', ')}`)
+    } else {
+      console.log(`⚠️  No rankings found - HTML structure may have changed`)
+      console.log(`   Consider updating the parsing logic or using a proper HTML parser`)
+    }
     
-    return rankings
+    return result
   } catch (error) {
     console.error(`❌ Error scraping ${gender} rankings:`, error.message)
     return null
