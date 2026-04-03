@@ -14,42 +14,90 @@ interface SavedConference {
 }
 
 export default function ConferencesPage() {
+  console.log('🔄 ConferencesPage component rendering...')
+  
   const [conferences, setConferences] = useState<SavedConference[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date')
+  const [mounted, setMounted] = useState(false)
+
+  console.log('📊 Component state:', { mounted, loading, error, conferencesLength: conferences.length })
 
   const supabase = createClient()
+  console.log('🔌 Supabase client created')
 
   useEffect(() => {
+    console.log('🎯 Component mounted, starting setup...')
+    setMounted(true)
+    console.log('✅ Mounted state set to true')
     loadConferences()
+    console.log('🚀 loadConferences called')
   }, [])
 
   const loadConferences = async () => {
+    console.log('🚀 Starting loadConferences...')
     try {
       setLoading(true)
       setError('')
+      console.log('✅ Loading state set to true')
+      
+      // Check if supabase client exists
+      console.log('🔍 Checking supabase client...')
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+      console.log('✅ Supabase client exists')
+      
+      // Check environment variables
+      console.log('🔍 Environment variables:')
+      console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing')
+      console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing')
       
       // Add timeout to prevent stalling
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database connection timeout')), 10000)
-      )
+      console.log('⏰ Setting up 10-second timeout...')
+      const timeoutPromise = new Promise((_, reject) => {
+        console.log('⏰ Timeout started')
+        setTimeout(() => {
+          console.log('⏰ Timeout triggered!')
+          reject(new Error('Database connection timeout after 10 seconds'))
+        }, 10000)
+      })
       
+      console.log('📊 Starting database query...')
       const dataPromise = supabase
         .from('tffrs_conferences')
         .select('id, url, conference_name, scraped_at, data')
         .order('scraped_at', { ascending: false })
       
+      console.log('⏳ Waiting for database response...')
       const { data, error } = await Promise.race([dataPromise, timeoutPromise]) as any
       
-      if (error) throw error
+      console.log('📉 Database response received:')
+      console.log('Data:', data)
+      console.log('Error:', error)
+      
+      if (error) {
+        console.error('❌ Database error:', error)
+        throw error
+      }
+      
+      console.log('✅ Data loaded successfully, setting conferences...')
       setConferences(data || [])
+      console.log('✅ Conferences state updated')
     } catch (err: any) {
+      console.error('💥 Conference loading error:', err)
+      console.error('💥 Error details:', {
+        message: err.message,
+        stack: err.stack,
+        code: err.code
+      })
       setError(err.message || 'Failed to load conferences')
-      console.error('Conference loading error:', err)
     } finally {
+      console.log('🏁 Setting loading to false...')
       setLoading(false)
+      console.log('✅ Load conferences complete')
     }
   }
 
@@ -91,17 +139,19 @@ export default function ConferencesPage() {
     return { men: menCount, women: womenCount, total: totalPoints }
   }
 
-  if (loading) {
+  if (!mounted) {
+    console.log('⏳ Component not mounted yet, showing loading...')
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-trackrecruit-yellow border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-900 font-bold">Loading conferences...</p>
+          <p className="text-gray-900 font-bold">Loading page...</p>
         </div>
       </div>
     )
   }
 
+  console.log('🎨 Component mounted, rendering main content...')
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
