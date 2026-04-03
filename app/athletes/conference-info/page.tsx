@@ -17,28 +17,48 @@ export default function ConferenceListPage() {
   const [conferences, setConferences] = useState<Conference[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const supabase = createClient()
 
   useEffect(() => {
+    console.log('🔄 useEffect triggered')
+    
+    const loadConferences = async () => {
+      console.log('🔍 Starting to load conferences...')
+      console.log('⏰ Time:', new Date().toISOString())
+      
+      try {
+        console.log('📡 Making Supabase query...')
+        const startTime = performance.now()
+        
+        const supabase = createClient()
+        const { data, error } = await supabase
+          .from('tffrs_conferences')
+          .select('id, conference_name, url')
+          .order('conference_name', { ascending: true })
+          .limit(100)
+        
+        const endTime = performance.now()
+        console.log(`⏱️ Query took ${(endTime - startTime).toFixed(2)}ms`)
+        
+        if (error) {
+          console.error('❌ Supabase error:', error)
+          throw error
+        }
+        
+        console.log('✅ Data received:', data?.length, 'conferences')
+        console.log('📊 Sample data:', data?.[0])
+        
+        setConferences(data || [])
+      } catch (err) {
+        console.error('💥 Error loading conferences:', err)
+        console.error('Error details:', JSON.stringify(err, null, 2))
+      } finally {
+        console.log('🏁 Loading complete, setting loading to false')
+        setLoading(false)
+      }
+    }
+    
     loadConferences()
   }, [])
-
-  const loadConferences = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('tffrs_conferences')
-        .select('id, conference_name, url')
-        .order('conference_name', { ascending: true })
-        .limit(100)
-      
-      if (error) throw error
-      setConferences(data || [])
-    } catch (err) {
-      console.error('Error loading conferences:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filteredConferences = conferences.filter(conf => 
     conf.conference_name?.toLowerCase().includes(searchQuery.toLowerCase())
