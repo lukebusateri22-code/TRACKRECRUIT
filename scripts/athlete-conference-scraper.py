@@ -162,6 +162,13 @@ def insert_performance(team_id, athlete_name, event_name, event_category, mark, 
 def process_conference(url, index, total):
     """Process a single conference"""
     conference_name = extract_conference_name(url)
+    
+    # Skip ACC (already has data), Unknown Conference, and Test.Com
+    skip_conferences = ['Acc', 'Unknown Conference', 'Test.Com', 'Test Com']
+    if conference_name in skip_conferences:
+        print(f"\n[{index}/{total}] {conference_name} - SKIPPED (already has data or excluded)")
+        return 0
+    
     print(f"\n[{index}/{total}] {conference_name}")
     print(f"  📊 Scraping...")
     
