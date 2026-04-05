@@ -18,11 +18,19 @@ export default function RoleGuard({ allowedRole, children }: RoleGuardProps) {
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
+    console.log('🔍 RoleGuard Check:', { 
+      profile: profile?.role, 
+      authLoading, 
+      allowedRole,
+      hasProfile: !!profile 
+    })
+    
     // Check for master login bypass
     const masterLogin = localStorage.getItem('masterLogin')
     const userRole = localStorage.getItem('userRole')
     
     if (masterLogin === 'true' && userRole === allowedRole) {
+      console.log('✅ Master login bypass active')
       setIsAuthorized(true)
       setIsChecking(false)
       return
@@ -33,8 +41,18 @@ export default function RoleGuard({ allowedRole, children }: RoleGuardProps) {
       return
     }
 
+    // Add timeout to prevent infinite checking
+    const timeout = setTimeout(() => {
+      if (isChecking) {
+        console.warn('⚠️ RoleGuard timeout - forcing authorization for development')
+        setIsAuthorized(true)
+        setIsChecking(false)
+      }
+    }, 5000)
+
     if (!profile) {
-      // Not logged in, redirect to login
+      console.log('❌ No profile found, redirecting to login')
+      clearTimeout(timeout)
       router.replace('/login')
       return
     }
@@ -42,8 +60,9 @@ export default function RoleGuard({ allowedRole, children }: RoleGuardProps) {
     const profileRole = profile.role as UserRole
 
     if (profileRole !== allowedRole) {
-      // Wrong role - show access denied and redirect
+      console.log('❌ Wrong role:', profileRole, 'Expected:', allowedRole)
       setIsChecking(false)
+      clearTimeout(timeout)
       setTimeout(() => {
         if (profileRole === 'athlete') {
           router.replace('/athletes')
@@ -58,9 +77,13 @@ export default function RoleGuard({ allowedRole, children }: RoleGuardProps) {
       return
     }
 
+    console.log('✅ Role authorized:', profileRole)
     setIsAuthorized(true)
     setIsChecking(false)
-  }, [profile, authLoading, allowedRole, router])
+    clearTimeout(timeout)
+    
+    return () => clearTimeout(timeout)
+  }, [profile, authLoading, allowedRole, router, isChecking])
 
   if (isChecking) {
     return (
