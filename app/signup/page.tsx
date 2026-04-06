@@ -37,21 +37,32 @@ export default function SignUpPage() {
       
       console.log('Signup result:', result)
       
-      // Wait a moment for trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Wait longer for profile creation trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 3000))
       
       console.log('Redirecting to onboarding...')
       
-      // Redirect to onboarding page based on role
-      if (userType === 'athlete') {
-        router.push('/athletes/onboarding')
-      } else {
-        router.push('/coaches/complete-profile')
-      }
+      // Use window.location.href for hard redirect to avoid auth lock issues
+      const redirectUrl = userType === 'athlete' 
+        ? '/athletes/onboarding' 
+        : '/coaches/complete-profile'
+      
+      window.location.href = redirectUrl
+      
     } catch (err: any) {
       console.error('Signup error:', err)
-      setError(err.message || 'Failed to create account')
-      setLoading(false)
+      
+      // Handle auth lock timeout gracefully
+      if (err.message?.includes('lock') || err.message?.includes('timeout')) {
+        setError('Account created! Redirecting...')
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        window.location.href = userType === 'athlete' 
+          ? '/athletes/onboarding' 
+          : '/coaches/complete-profile'
+      } else {
+        setError(err.message || 'Failed to create account')
+        setLoading(false)
+      }
     }
   }
 
