@@ -10,6 +10,10 @@ from flask import Flask, render_template, request, jsonify, send_file
 import io
 import re
 from collections import defaultdict
+import urllib3
+
+# Suppress SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
@@ -73,7 +77,7 @@ def extract_gender(event_name):
 
 def scrape_performance_list(url):
     """Scrape performance data from TFRRS performance list page"""
-    resp = requests.get(url, headers=HEADERS)
+    resp = requests.get(url, headers=HEADERS, verify=False)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
 

@@ -12,6 +12,10 @@ import json
 import time
 import sys
 from datetime import datetime
+import urllib3
+
+# Suppress SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables from .env.local file
 def load_env():
@@ -89,7 +93,7 @@ def get_or_create_conference(url, conference_name, data):
     
     # Check if exists
     check_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?url=eq.{url}&select=id"
-    response = requests.get(check_url, headers=headers)
+    response = requests.get(check_url, headers=headers, verify=False)
     
     conf_data = {
         'url': url,
@@ -102,12 +106,12 @@ def get_or_create_conference(url, conference_name, data):
         # Update existing
         conf_id = response.json()[0]['id']
         update_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?id=eq.{conf_id}"
-        requests.patch(update_url, headers=headers, json=conf_data)
+        requests.patch(update_url, headers=headers, json=conf_data, verify=False)
         return conf_id
     else:
         # Create new
         insert_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences"
-        response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=conf_data)
+        response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=conf_data, verify=False)
         if response.status_code in [200, 201]:
             return response.json()[0]['id']
     
@@ -123,7 +127,7 @@ def clear_conference_performances(conference_id):
     
     # Get all team IDs for this conference
     teams_url = f"{SUPABASE_URL}/rest/v1/tffrs_teams?conference_id=eq.{conference_id}&select=id"
-    teams_response = requests.get(teams_url, headers=headers)
+    teams_response = requests.get(teams_url, headers=headers, verify=False)
     
     if teams_response.status_code == 200 and teams_response.json():
         team_ids = [t['id'] for t in teams_response.json()]
@@ -131,7 +135,7 @@ def clear_conference_performances(conference_id):
         # Delete performances for each team
         for team_id in team_ids:
             delete_url = f"{SUPABASE_URL}/rest/v1/tffrs_performances?team_id=eq.{team_id}"
-            requests.delete(delete_url, headers=headers)
+            requests.delete(delete_url, headers=headers, verify=False)
 
 def get_or_create_team(conference_id, team_name, gender):
     """Get existing or create new team"""
@@ -143,7 +147,7 @@ def get_or_create_team(conference_id, team_name, gender):
     
     # Check if exists
     check_url = f"{SUPABASE_URL}/rest/v1/tffrs_teams?conference_id=eq.{conference_id}&team_name=eq.{team_name}&gender=eq.{gender}&select=id"
-    response = requests.get(check_url, headers=headers)
+    response = requests.get(check_url, headers=headers, verify=False)
     
     if response.json():
         return response.json()[0]['id']
@@ -156,7 +160,7 @@ def get_or_create_team(conference_id, team_name, gender):
         'gender': gender,
         'total_points': 0
     }
-    response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=team_data)
+    response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=team_data, verify=False)
     
     if response.status_code in [200, 201]:
         return response.json()[0]['id']
@@ -176,7 +180,7 @@ def batch_insert_performances(performances):
     }
     
     insert_url = f"{SUPABASE_URL}/rest/v1/tffrs_performances"
-    response = requests.post(insert_url, headers=headers, json=performances)
+    response = requests.post(insert_url, headers=headers, json=performances, verify=False)
     
     if response.status_code in [200, 201]:
         return len(performances)
@@ -279,7 +283,7 @@ def main():
     
     # Check Flask scraper
     try:
-        requests.get('http://localhost:8080/', timeout=5)
+        requests.get('http://localhost:8080/', timeout=5, verify=False)
         print("✅ Flask scraper is running\n")
     except:
         print("❌ Flask scraper not running on port 8080")
