@@ -157,7 +157,7 @@ def scrape_performance_list(url):
     return pd.DataFrame(all_records)
 
 def calculate_team_scores(df):
-    """Calculate team scores with scoring system and tie handling"""
+    """Calculate team scores with scoring system, tie handling, and 4-athlete-per-team limit"""
     team_scores = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     event_breakdown = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     
@@ -166,27 +166,56 @@ def calculate_team_scores(df):
         # Get athletes in top 8 positions
         top_8 = event_df[event_df['rank'] <= 8].copy()
         
-        # Calculate points for each rank, handling ties
-        rank_counts = top_8['rank'].value_counts().to_dict()
+        # RULE: Each team can only have 4 athletes score per event
+        # Track how many athletes from each team have scored in this event
+        team_athlete_count = defaultdict(int)
         
+        # Filter athletes - only keep first 4 per team
+        valid_athletes = []
         for _, row in top_8.iterrows():
             team = row['team']
+            if team_athlete_count[team] < 4:
+                valid_athletes.append(row)
+                team_athlete_count[team] += 1
+        
+        # Convert back to DataFrame
+        if not valid_athletes:
+            continue
+        valid_df = pd.DataFrame(valid_athletes)
+        
+        # Re-rank athletes after removing 5th+ team members
+        # Sort by original rank to maintain order
+        valid_df = valid_df.sort_values('rank')
+        
+        # Assign new ranks (1-8 based on position after filtering)
+        new_ranks = {}
+        current_rank = 1
+        for idx, row in valid_df.iterrows():
+            new_ranks[idx] = current_rank
+            current_rank += 1
+        
+        # Calculate points for each rank, handling ties
+        rank_counts = valid_df['rank'].value_counts().to_dict()
+        
+        for idx, row in valid_df.iterrows():
+            team = row['team']
             category = row['category']
-            rank = row['rank']
+            original_rank = row['rank']
+            new_rank = new_ranks[idx]
             
             # Only score top 8 positions
-            if rank in SCORING_SYSTEM:
-                # Check if there's a tie at this rank
-                num_tied = rank_counts.get(rank, 1)
+            if new_rank <= 8 and new_rank in SCORING_SYSTEM:
+                # Check if there's a tie at this rank (using original ranks for tie detection)
+                num_tied = rank_counts.get(original_rank, 1)
                 
                 if num_tied > 1:
                     # Average the points for tied positions
                     # For example, if 2 athletes tie for 1st, they get (10+8)/2 = 9 points each
-                    total_points = sum(SCORING_SYSTEM.get(rank + i, 0) for i in range(num_tied))
-                    points = total_points / num_tied
+                    total_points = sum(SCORING_SYSTEM.get(new_rank + i, 0) for i in range(num_tied))
+                    points = round(total_points / num_tied, 2)  # Round to 2 decimal places
                 else:
                     # No tie, use standard points
-                    points = SCORING_SYSTEM[rank]
+                    points = round(float(SCORING_SYSTEM[new_rank]), 2)  # Round to 2 decimal places
                 
                 # Add to team total
                 team_scores[gender][team][category] += points
@@ -195,7 +224,7 @@ def calculate_team_scores(df):
                 # Track event breakdown
                 event_breakdown[gender][team][category].append({
                     'event': event,
-                    'rank': rank,
+                    'rank': new_rank,
                     'points': points,
                     'athlete': row['athlete'],
                     'mark': row['mark']
