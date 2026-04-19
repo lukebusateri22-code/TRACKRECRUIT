@@ -15,6 +15,8 @@ interface Performance {
   rank: number
   points: number
   year: string
+  team_name?: string
+  gender?: string
 }
 
 interface Conference {
@@ -32,6 +34,7 @@ export default function ConferenceRankingsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedEvent, setSelectedEvent] = useState<string>('')
   const [categoryFilter, setCategoryFilter] = useState<string>('All')
+  const [genderFilter, setGenderFilter] = useState<string>('All')
 
   useEffect(() => {
     loadConferenceData()
@@ -73,17 +76,31 @@ export default function ConferenceRankingsPage() {
       
       const teamIds = (teamsData as any[])?.map(t => t.id) || []
       
-      // Then get performances for those teams
+      // Then get performances for those teams with team info
       const { data: perfData, error: perfError } = await supabase
         .from('tffrs_performances')
-        .select('*')
+        .select(`
+          *,
+          tffrs_teams!inner(
+            team_name,
+            gender
+          )
+        `)
         .in('team_id', teamIds)
         .lte('rank', 8)
         .order('event_name', { ascending: true })
         .order('rank', { ascending: true })
       
       if (perfError) throw perfError
-      setPerformances(perfData || [])
+      
+      // Flatten the team data into the performance object
+      const flattenedPerf = (perfData || []).map((p: any) => ({
+        ...p,
+        team_name: p.tffrs_teams?.team_name,
+        gender: p.tffrs_teams?.gender
+      }))
+      
+      setPerformances(flattenedPerf)
       
       // Set first event as selected
       if (perfData && perfData.length > 0) {
@@ -105,18 +122,34 @@ export default function ConferenceRankingsPage() {
     eventGroups[perf.event_name].push(perf)
   })
 
-  // Filter events by category
+  // Filter events by category and gender
   const filteredEvents = Object.keys(eventGroups).filter(eventName => {
-    if (categoryFilter === 'All') return true
     const eventPerfs = eventGroups[eventName]
-    return eventPerfs.some(p => p.event_category === categoryFilter)
+    
+    // Filter by category
+    if (categoryFilter !== 'All') {
+      if (!eventPerfs.some(p => p.event_category === categoryFilter)) return false
+    }
+    
+    // Filter by gender
+    if (genderFilter !== 'All') {
+      if (!eventPerfs.some(p => p.gender === genderFilter)) return false
+    }
+    
+    return true
   }).sort()
 
   const events = filteredEvents
-  const selectedPerformances = selectedEvent ? eventGroups[selectedEvent] || [] : []
   
-  // Get unique categories
+  // Filter selected performances by gender
+  let selectedPerformances = selectedEvent ? eventGroups[selectedEvent] || [] : []
+  if (genderFilter !== 'All') {
+    selectedPerformances = selectedPerformances.filter(p => p.gender === genderFilter)
+  }
+  
+  // Get unique categories and genders
   const categories = ['All', ...Array.from(new Set(performances.map(p => p.event_category))).sort()]
+  const genders = ['All', 'Men', 'Women']
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -183,6 +216,24 @@ export default function ConferenceRankingsPage() {
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-4 sticky top-4">
                 <h3 className="font-bold text-gray-900 mb-4">Filter Events</h3>
                 
+                {/* Gender Filter */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Gender
+                  </label>
+                  <select
+                    value={genderFilter}
+                    onChange={(e) => setGenderFilter(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg font-medium focus:border-trackrecruit-yellow focus:outline-none"
+                  >
+                    {genders.map((gender) => (
+                      <option key={gender} value={gender}>
+                        {gender}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Category Filter */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -248,6 +299,7 @@ export default function ConferenceRankingsPage() {
                       <tr className="bg-gray-50 border-b-2 border-gray-200">
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Rank</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Athlete</th>
+                        <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">School</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Mark</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Points</th>
                         <th className="px-6 py-4 text-left text-sm font-bold text-gray-900">Year</th>
@@ -271,6 +323,9 @@ export default function ConferenceRankingsPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span className="font-semibold text-gray-900">{perf.athlete_name}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-gray-700 text-sm">{perf.team_name || 'N/A'}</span>
                           </td>
                           <td className="px-6 py-4">
                             <span className="font-mono font-bold text-gray-900 text-lg">{perf.mark}</span>
