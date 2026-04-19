@@ -90,7 +90,7 @@ def scrape_performance_list(url):
         event_name = h3.get_text(strip=True)
         
         # Skip non-event headers
-        if not any(keyword in event_name for keyword in ['Meters', 'Jump', 'Vault', 'Put', 'Relay', 'Throw', 'athlon', 'Hurdles', 'Steeplechase']):
+        if not any(keyword in event_name for keyword in ['Meters', 'Jump', 'Vault', 'Put', 'Relay', 'Throw', 'athlon', 'Hurdles', 'Steeplechase', 'Discus', 'Javelin', 'Hammer']):
             continue
         
         # Clean up the event name for display
@@ -157,33 +157,49 @@ def scrape_performance_list(url):
     return pd.DataFrame(all_records)
 
 def calculate_team_scores(df):
-    """Calculate team scores with scoring system"""
+    """Calculate team scores with scoring system and tie handling"""
     team_scores = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     event_breakdown = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     
-    for _, row in df.iterrows():
-        team = row['team']
-        event = row['event']
-        category = row['category']
-        gender = row['gender']
-        rank = row['rank']
+    # Group by event and gender to handle ties within each event
+    for (event, gender), event_df in df.groupby(['event', 'gender']):
+        # Get athletes in top 8 positions
+        top_8 = event_df[event_df['rank'] <= 8].copy()
         
-        # Only score top 8 positions
-        if rank in SCORING_SYSTEM:
-            points = SCORING_SYSTEM[rank]
+        # Calculate points for each rank, handling ties
+        rank_counts = top_8['rank'].value_counts().to_dict()
+        
+        for _, row in top_8.iterrows():
+            team = row['team']
+            category = row['category']
+            rank = row['rank']
             
-            # Add to team total
-            team_scores[gender][team][category] += points
-            team_scores[gender][team]['total'] += points
-            
-            # Track event breakdown
-            event_breakdown[gender][team][category].append({
-                'event': event,
-                'rank': rank,
-                'points': points,
-                'athlete': row['athlete'],
-                'mark': row['mark']
-            })
+            # Only score top 8 positions
+            if rank in SCORING_SYSTEM:
+                # Check if there's a tie at this rank
+                num_tied = rank_counts.get(rank, 1)
+                
+                if num_tied > 1:
+                    # Average the points for tied positions
+                    # For example, if 2 athletes tie for 1st, they get (10+8)/2 = 9 points each
+                    total_points = sum(SCORING_SYSTEM.get(rank + i, 0) for i in range(num_tied))
+                    points = total_points / num_tied
+                else:
+                    # No tie, use standard points
+                    points = SCORING_SYSTEM[rank]
+                
+                # Add to team total
+                team_scores[gender][team][category] += points
+                team_scores[gender][team]['total'] += points
+                
+                # Track event breakdown
+                event_breakdown[gender][team][category].append({
+                    'event': event,
+                    'rank': rank,
+                    'points': points,
+                    'athlete': row['athlete'],
+                    'mark': row['mark']
+                })
     
     return team_scores, event_breakdown
 
