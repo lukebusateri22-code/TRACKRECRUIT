@@ -10,6 +10,10 @@ import time
 import sys
 from datetime import datetime
 import os
+import urllib3
+
+# Suppress SSL warnings
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables from .env.local file
 def load_env():
@@ -93,7 +97,7 @@ def save_to_supabase(url, data):
         
         # Check if conference exists
         check_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?url=eq.{url}"
-        response = requests.get(check_url, headers=headers)
+        response = requests.get(check_url, headers=headers, verify=False, timeout=30)
         
         conference_data = {
             'url': url,
@@ -105,11 +109,11 @@ def save_to_supabase(url, data):
         if response.status_code == 200 and response.json():
             # Update existing
             update_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?url=eq.{url}"
-            response = requests.patch(update_url, headers=headers, json=conference_data)
+            response = requests.patch(update_url, headers=headers, json=conference_data, verify=False, timeout=30)
         else:
             # Insert new
             insert_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences"
-            response = requests.post(insert_url, headers=headers, json=conference_data)
+            response = requests.post(insert_url, headers=headers, json=conference_data, verify=False, timeout=30)
         
         if response.status_code in [200, 201, 204]:
             print(f"✅ Saved: {conference_name}")
@@ -128,7 +132,7 @@ def main():
     
     # Check if Flask scraper is running
     try:
-        response = requests.get('http://localhost:8080/', timeout=5)
+        response = requests.get('http://localhost:8080/', timeout=5, verify=False)
         print("✅ Flask scraper is running")
     except:
         print("❌ Flask scraper is not running on port 8080")

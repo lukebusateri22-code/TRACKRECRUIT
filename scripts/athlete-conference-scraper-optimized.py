@@ -93,7 +93,7 @@ def get_or_create_conference(url, conference_name, data):
     
     # Check if exists
     check_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?url=eq.{url}&select=id"
-    response = requests.get(check_url, headers=headers, verify=False)
+    response = requests.get(check_url, headers=headers, verify=False, timeout=30)
     
     conf_data = {
         'url': url,
@@ -106,12 +106,12 @@ def get_or_create_conference(url, conference_name, data):
         # Update existing
         conf_id = response.json()[0]['id']
         update_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences?id=eq.{conf_id}"
-        requests.patch(update_url, headers=headers, json=conf_data, verify=False)
+        requests.patch(update_url, headers=headers, json=conf_data, verify=False, timeout=30)
         return conf_id
     else:
         # Create new
         insert_url = f"{SUPABASE_URL}/rest/v1/tffrs_conferences"
-        response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=conf_data, verify=False)
+        response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=conf_data, verify=False, timeout=30)
         if response.status_code in [200, 201]:
             return response.json()[0]['id']
     
@@ -125,17 +125,23 @@ def clear_conference_performances(conference_id):
         'Content-Type': 'application/json'
     }
     
-    # Get all team IDs for this conference
-    teams_url = f"{SUPABASE_URL}/rest/v1/tffrs_teams?conference_id=eq.{conference_id}&select=id"
-    teams_response = requests.get(teams_url, headers=headers, verify=False)
-    
-    if teams_response.status_code == 200 and teams_response.json():
-        team_ids = [t['id'] for t in teams_response.json()]
+    try:
+        # Get all team IDs for this conference
+        teams_url = f"{SUPABASE_URL}/rest/v1/tffrs_teams?conference_id=eq.{conference_id}&select=id"
+        teams_response = requests.get(teams_url, headers=headers, verify=False, timeout=30)
         
-        # Delete performances for each team
-        for team_id in team_ids:
-            delete_url = f"{SUPABASE_URL}/rest/v1/tffrs_performances?team_id=eq.{team_id}"
-            requests.delete(delete_url, headers=headers, verify=False)
+        if teams_response.status_code == 200 and teams_response.json():
+            team_ids = [t['id'] for t in teams_response.json()]
+            
+            # Delete performances for each team
+            for team_id in team_ids:
+                delete_url = f"{SUPABASE_URL}/rest/v1/tffrs_performances?team_id=eq.{team_id}"
+                try:
+                    requests.delete(delete_url, headers=headers, verify=False, timeout=30)
+                except:
+                    pass  # Continue even if delete fails
+    except:
+        pass  # Continue even if clearing fails
 
 def get_or_create_team(conference_id, team_name, gender):
     """Get existing or create new team"""
@@ -147,7 +153,7 @@ def get_or_create_team(conference_id, team_name, gender):
     
     # Check if exists
     check_url = f"{SUPABASE_URL}/rest/v1/tffrs_teams?conference_id=eq.{conference_id}&team_name=eq.{team_name}&gender=eq.{gender}&select=id"
-    response = requests.get(check_url, headers=headers, verify=False)
+    response = requests.get(check_url, headers=headers, verify=False, timeout=30)
     
     if response.json():
         return response.json()[0]['id']
@@ -160,7 +166,7 @@ def get_or_create_team(conference_id, team_name, gender):
         'gender': gender,
         'total_points': 0
     }
-    response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=team_data, verify=False)
+    response = requests.post(insert_url, headers={**headers, 'Prefer': 'return=representation'}, json=team_data, verify=False, timeout=30)
     
     if response.status_code in [200, 201]:
         return response.json()[0]['id']
@@ -180,7 +186,7 @@ def batch_insert_performances(performances):
     }
     
     insert_url = f"{SUPABASE_URL}/rest/v1/tffrs_performances"
-    response = requests.post(insert_url, headers=headers, json=performances, verify=False)
+    response = requests.post(insert_url, headers=headers, json=performances, verify=False, timeout=60)
     
     if response.status_code in [200, 201]:
         return len(performances)
@@ -283,7 +289,7 @@ def main():
     
     # Check Flask scraper
     try:
-        requests.get('http://localhost:8080/', timeout=5, verify=False)
+        requests.get('http://localhost:8080/', timeout=10, verify=False)
         print("✅ Flask scraper is running\n")
     except:
         print("❌ Flask scraper not running on port 8080")
