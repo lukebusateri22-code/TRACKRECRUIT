@@ -1,39 +1,182 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Users, TrendingUp, AlertCircle, CheckCircle, BarChart3, MessageSquare, Shield, Eye, Ban, Search } from 'lucide-react'
+import { Users, TrendingUp, AlertCircle, CheckCircle, BarChart3, MessageSquare, Shield, Eye, Ban, Search, UserX, UserCheck } from 'lucide-react'
 import RoleGuard from '@/components/RoleGuard'
+import { createClient } from '@/lib/supabase/client'
+
+interface User {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  role: string
+  status: string
+  created_at: string
+  is_verified: boolean
+}
+
+interface FlaggedContent {
+  id: string
+  content_type: string
+  reason: string
+  severity: string
+  created_at: string
+  status: string
+  reported_user_id: string
+  profiles?: {
+    first_name: string
+    last_name: string
+    email: string
+  }
+}
+
+interface Stats {
+  totalUsers: number
+  athletes: number
+  coaches: number
+  activeUsers: number
+  suspendedUsers: number
+  bannedUsers: number
+  pendingReports: number
+}
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'moderation' | 'analytics'>('overview')
   const [searchQuery, setSearchQuery] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
+  
+  // Real data from Supabase
+  const [stats, setStats] = useState<Stats>({
+    totalUsers: 0,
+    athletes: 0,
+    coaches: 0,
+    activeUsers: 0,
+    suspendedUsers: 0,
+    bannedUsers: 0,
+    pendingReports: 0
+  })
+  const [users, setUsers] = useState<User[]>([])
+  const [flaggedContent, setFlaggedContent] = useState<FlaggedContent[]>([])
 
-  // Mock data
-  const stats = {
-    totalUsers: 2847,
-    athletes: 2156,
-    coaches: 691,
-    verifiedUsers: 2103,
-    pendingVerification: 127,
-    activeToday: 456,
-    messagesLast24h: 1234,
-    profileViews: 8932
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      const supabase = createClient()
+      
+      // Load stats
+      const { data: statsData } = await supabase
+        .from('admin_dashboard_stats')
+        .select('*')
+        .single()
+      
+      if (statsData) {
+        setStats({
+          totalUsers: statsData.total_users || 0,
+          athletes: statsData.total_athletes || 0,
+          coaches: statsData.total_coaches || 0,
+          activeUsers: statsData.active_users || 0,
+          suspendedUsers: statsData.suspended_users || 0,
+          bannedUsers: statsData.banned_users || 0,
+          pendingReports: statsData.pending_reports || 0
+        })
+      }
+      
+      // Load recent users
+      const { data: usersData } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      
+      if (usersData) {
+        setUsers(usersData)
+      }
+      
+      // Load flagged content
+      const { data: flaggedData } = await supabase
+        .from('flagged_content')
+        .select(`
+          *,
+          profiles:reported_user_id (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(20)
+      
+      if (flaggedData) {
+        setFlaggedContent(flaggedData)
+      }
+      
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const recentUsers = [
-    { id: 1, name: 'Jordan Davis', role: 'athlete', email: 'jordan@school.edu', status: 'verified', joined: '2h ago' },
-    { id: 2, name: 'Coach Williams', role: 'coach', email: 'williams@university.edu', status: 'pending', joined: '4h ago' },
-    { id: 3, name: 'Sarah Johnson', role: 'athlete', email: 'sarah@school.edu', status: 'verified', joined: '6h ago' },
-    { id: 4, name: 'Coach Martinez', role: 'coach', email: 'martinez@college.edu', status: 'verified', joined: '8h ago' },
-    { id: 5, name: 'Marcus Lee', role: 'athlete', email: 'marcus@school.edu', status: 'pending', joined: '10h ago' }
-  ]
+  const handleUserAction = async (userId: string, action: 'suspend' | 'ban' | 'reactivate') => {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) return
+      
+      let functionName = ''
+      if (action === 'suspend') functionName = 'suspend_user'
+      else if (action === 'ban') functionName = 'ban_user'
+      else if (action === 'reactivate') functionName = 'reactivate_user'
+      
+      const { error } = await supabase.rpc(functionName, {
+        p_user_id: userId,
+        p_admin_id: user.id
+      })
+      
+      if (error) throw error
+      
+      // Reload data
+      await loadDashboardData()
+    } catch (error) {
+      console.error(`Error ${action}ing user:`, error)
+      alert(`Failed to ${action} user`)
+    }
+  }
 
-  const flaggedContent = [
-    { id: 1, type: 'profile', user: 'John Smith', reason: 'Inappropriate content', severity: 'high', date: '1h ago' },
-    { id: 2, type: 'message', user: 'Coach Brown', reason: 'Spam', severity: 'medium', date: '3h ago' },
-    { id: 3, type: 'profile', user: 'Emily Chen', reason: 'Fake credentials', severity: 'high', date: '5h ago' }
-  ]
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+    
+    if (seconds < 60) return `${seconds}s ago`
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+    return `${Math.floor(seconds / 86400)}d ago`
+  }
+
+  // Filter users
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = searchQuery === '' || 
+      user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter
+    
+    return matchesSearch && matchesRole && matchesStatus
+  })
+
+  const recentUsers = filteredUsers.slice(0, 5)
 
   return (
     <RoleGuard allowedRole="admin">
@@ -136,28 +279,28 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <CheckCircle className="w-8 h-8 text-green-600" />
-                  <span className="text-sm font-semibold text-green-600">+8%</span>
+                  <span className="text-sm font-semibold text-green-600">Active</span>
                 </div>
-                <h3 className="text-3xl font-black text-gray-900">{stats.verifiedUsers.toLocaleString()}</h3>
-                <p className="text-gray-600">Verified Users</p>
+                <h3 className="text-3xl font-black text-gray-900">{stats.activeUsers.toLocaleString()}</h3>
+                <p className="text-gray-600">Active Users</p>
               </div>
 
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <TrendingUp className="w-8 h-8 text-trackrecruit-yellow" />
-                  <span className="text-sm font-semibold text-green-600">+24%</span>
+                  <Ban className="w-8 h-8 text-orange-600" />
+                  <span className="text-sm font-semibold text-orange-600">Suspended</span>
                 </div>
-                <h3 className="text-3xl font-black text-gray-900">{stats.activeToday}</h3>
-                <p className="text-gray-600">Active Today</p>
+                <h3 className="text-3xl font-black text-gray-900">{stats.suspendedUsers}</h3>
+                <p className="text-gray-600">Suspended Users</p>
               </div>
 
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <AlertCircle className="w-8 h-8 text-red-600" />
-                  <span className="text-sm font-semibold text-red-600">Urgent</span>
+                  <span className="text-sm font-semibold text-red-600">Reports</span>
                 </div>
-                <h3 className="text-3xl font-black text-gray-900">{stats.pendingVerification}</h3>
-                <p className="text-gray-600">Pending Verification</p>
+                <h3 className="text-3xl font-black text-gray-900">{stats.pendingReports}</h3>
+                <p className="text-gray-600">Pending Reports</p>
               </div>
             </div>
 
@@ -169,18 +312,20 @@ export default function AdminDashboard() {
                   {recentUsers.map(user => (
                     <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div>
-                        <h3 className="font-bold text-gray-900">{user.name}</h3>
+                        <h3 className="font-bold text-gray-900">{user.first_name} {user.last_name}</h3>
                         <p className="text-sm text-gray-600">{user.email}</p>
                       </div>
                       <div className="text-right">
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                          user.status === 'verified' 
+                          user.status === 'active' 
                             ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
+                            : user.status === 'suspended'
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
-                          {user.status}
+                          {user.status || 'active'}
                         </span>
-                        <p className="text-sm text-gray-600 mt-1">{user.joined}</p>
+                        <p className="text-sm text-gray-600 mt-1">{getTimeAgo(user.created_at)}</p>
                       </div>
                     </div>
                   ))}
@@ -190,10 +335,12 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
                 <h2 className="text-2xl font-black text-gray-900 mb-6">Flagged Content</h2>
                 <div className="space-y-4">
-                  {flaggedContent.map(item => (
+                  {flaggedContent.length > 0 ? flaggedContent.map(item => (
                     <div key={item.id} className="p-4 bg-gray-50 rounded-lg border-l-4 border-red-500">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-gray-900">{item.user}</span>
+                        <span className="font-bold text-gray-900">
+                          {item.profiles?.first_name} {item.profiles?.last_name}
+                        </span>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                           item.severity === 'high' 
                             ? 'bg-red-100 text-red-800' 
@@ -204,14 +351,16 @@ export default function AdminDashboard() {
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{item.reason}</p>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">{item.date}</span>
+                        <span className="text-xs text-gray-500">{getTimeAgo(item.created_at)}</span>
                         <div className="flex gap-2">
                           <button className="text-sm font-bold text-blue-600 hover:underline">Review</button>
                           <button className="text-sm font-bold text-red-600 hover:underline">Remove</button>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-gray-500 text-center py-8">No pending reports</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -235,16 +384,25 @@ export default function AdminDashboard() {
                       className="pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-trackrecruit-yellow focus:outline-none"
                     />
                   </div>
-                  <select className="px-4 py-2 border-2 border-gray-300 rounded-lg font-semibold focus:border-trackrecruit-yellow focus:outline-none">
-                    <option>All Roles</option>
-                    <option>Athletes</option>
-                    <option>Coaches</option>
+                  <select 
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="px-4 py-2 border-2 border-gray-300 rounded-lg font-semibold focus:border-trackrecruit-yellow focus:outline-none"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="athlete">Athletes</option>
+                    <option value="coach">Coaches</option>
+                    <option value="admin">Admins</option>
                   </select>
-                  <select className="px-4 py-2 border-2 border-gray-300 rounded-lg font-semibold focus:border-trackrecruit-yellow focus:outline-none">
-                    <option>All Status</option>
-                    <option>Verified</option>
-                    <option>Pending</option>
-                    <option>Suspended</option>
+                  <select 
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-2 border-2 border-gray-300 rounded-lg font-semibold focus:border-trackrecruit-yellow focus:outline-none"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="banned">Banned</option>
                   </select>
                 </div>
               </div>
@@ -262,9 +420,9 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentUsers.map(user => (
+                    {filteredUsers.map(user => (
                       <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="py-3 px-4 font-semibold text-gray-900">{user.name}</td>
+                        <td className="py-3 px-4 font-semibold text-gray-900">{user.first_name} {user.last_name}</td>
                         <td className="py-3 px-4 text-gray-600">{user.email}</td>
                         <td className="py-3 px-4">
                           <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
@@ -273,22 +431,44 @@ export default function AdminDashboard() {
                         </td>
                         <td className="py-3 px-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            user.status === 'verified' 
+                            user.status === 'active' 
                               ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
+                              : user.status === 'suspended'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-red-100 text-red-800'
                           }`}>
-                            {user.status}
+                            {user.status || 'active'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-gray-600">{user.joined}</td>
+                        <td className="py-3 px-4 text-gray-600">{getTimeAgo(user.created_at)}</td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
-                            <button className="p-2 hover:bg-gray-200 rounded" title="View Profile">
-                              <Eye className="w-4 h-4 text-gray-600" />
-                            </button>
-                            <button className="p-2 hover:bg-gray-200 rounded" title="Suspend User">
-                              <Ban className="w-4 h-4 text-red-600" />
-                            </button>
+                            {user.status === 'active' ? (
+                              <>
+                                <button 
+                                  onClick={() => handleUserAction(user.id, 'suspend')}
+                                  className="p-2 hover:bg-orange-100 rounded" 
+                                  title="Suspend User"
+                                >
+                                  <Ban className="w-4 h-4 text-orange-600" />
+                                </button>
+                                <button 
+                                  onClick={() => handleUserAction(user.id, 'ban')}
+                                  className="p-2 hover:bg-red-100 rounded" 
+                                  title="Ban User"
+                                >
+                                  <UserX className="w-4 h-4 text-red-600" />
+                                </button>
+                              </>
+                            ) : (
+                              <button 
+                                onClick={() => handleUserAction(user.id, 'reactivate')}
+                                className="p-2 hover:bg-green-100 rounded" 
+                                title="Reactivate User"
+                              >
+                                <UserCheck className="w-4 h-4 text-green-600" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -306,7 +486,7 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-xl shadow-lg border-2 border-gray-200 p-6">
               <h2 className="text-2xl font-black text-gray-900 mb-6">Content Moderation Queue</h2>
               <div className="space-y-4">
-                {flaggedContent.map(item => (
+                {flaggedContent.length > 0 ? flaggedContent.map(item => (
                   <div key={item.id} className="p-6 bg-gray-50 rounded-lg border-2 border-gray-200">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -319,12 +499,14 @@ export default function AdminDashboard() {
                             {item.severity} priority
                           </span>
                           <span className="px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-bold">
-                            {item.type}
+                            {item.content_type}
                           </span>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{item.user}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                          {item.profiles?.first_name} {item.profiles?.last_name}
+                        </h3>
                         <p className="text-gray-600 mb-3">Reason: {item.reason}</p>
-                        <p className="text-sm text-gray-500">Flagged {item.date}</p>
+                        <p className="text-sm text-gray-500">Flagged {getTimeAgo(item.created_at)}</p>
                       </div>
                       <div className="flex flex-col gap-2">
                         <button className="bg-green-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-600 transition">
@@ -339,7 +521,9 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-gray-500 text-center py-8">No flagged content to review</p>
+                )}
               </div>
             </div>
           </div>
